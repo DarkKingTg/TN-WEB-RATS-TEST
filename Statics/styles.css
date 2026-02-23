@@ -1,0 +1,868 @@
+/* styles.css - Professional Theme with Your Colors */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root {
+    --primary-dark: #0B0C10;
+    --secondary-dark: #1F2833;
+    --light-gray: #C5C6C7;
+    --cyan: #66FCF1;
+    --teal: #45A29E;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Rajdhani', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+    /* NOTE: overflow must NOT be hidden here — pages without .main-content-wrapper
+       (index.html, projects.html) use normal window scroll. Canvas is fixed. */
+}
+
+body {
+     background: rgba(11, 12, 16, 0.85);
+    font-family: var(--sans);
+    color: var(--light-gray);
+    line-height: 1.6;
+    min-height: 100%;
+    font-size: 18px;
+    /* display:flex removed — breaks pages using normal window scroll (index, projects) */
+    overflow-x: hidden;
+}
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(102,252,241,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102,252,241,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: -1;
+    animation: gridMove 30s linear infinite;
+}
+
+@keyframes gridMove {
+    from { background-position: 0 0; }
+    to { background-position: 40px 40px; }
+}
+
+/* Neural Network Canvas Background */
+#neural-network-canvas {
+    display: block;
+    position: fixed;
+    inset: 0; /* Top, right, bottom, left to 0 */
+    cursor: none; /* Hide default cursor to use custom one */
+    z-index: -1; /* Behind all content */
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Main content wrapper to handle scrolling on pages with scrollable content inside */
+.main-content-wrapper {
+    position: relative;
+    z-index: 1;      
+    scroll-behavior: smooth;
+    /* padding-top injected by script.js to account for fixed navbar */
+}
+
+.ui {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 32px;
+    pointer-events: none;
+    z-index: 5;
+}
+.ui span {
+    color: rgba(102,252,241,0.3);
+    font: 600 0.62rem/1 'Courier New', monospace;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.title {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 5;
+}
+.title h1 {
+    font: 900 clamp(2.5rem,7vw,5.5rem)/1 'Courier New', monospace;
+    color: #C5C6C7;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+.title h1 em {
+    color: #66FCF1;
+    font-style: normal;
+    text-shadow: 0 0 40px rgba(102,252,241,0.6);
+}
+.title p {
+    margin-top: 14px;
+    color: rgba(197,198,199,0.35);
+    font: 0.65rem/1 'Courier New', monospace;
+    letter-spacing: 0.55em;
+    text-transform: uppercase;
+}
+
+
+/* Navigation */
+.navbar {
+    background-color: var(--secondary-dark) !important; /* Solid */
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    padding: 1rem 0;
+    z-index: 10;
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.navbar-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--cyan);
+}
+
+.brand-text {
+    color: var(--cyan) !important;
+}
+
+.nav-link {
+    color: var(--light-gray) !important;
+    font-weight: 500;
+    margin: 0 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--cyan) !important;
+    transform: translateY(-2px);
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, rgba(31, 40, 51, 0.493) 0%, rgba(11, 12, 16, 0.7) 100%); /* 30% Transparent gradient */
+    padding: 120px 0 80px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 8;
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--light-gray);
+    margin-bottom: 2rem;
+    line-height: 1.2;
+}
+
+.hero-title .text-cyan {
+    color: var(--cyan);
+}
+
+.hero-subtitle {
+    font-size: 1.4rem;
+    margin-bottom: 3rem;
+}
+
+.hero-buttons .btn {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    background: linear-gradient(90deg, var(--teal), var(--cyan));
+    filter: blur(20px);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -1;
+}
+
+.btn-primary:hover::after {
+    opacity: 0.7;
+}
+
+
+.btn-primary:hover {
+    box-shadow: 0 0 5px var(--cyan), 0 0 25px var(--cyan), 0 0 50px var(--cyan);
+}
+
+.hero-image img {
+    max-height: 500px;
+    width: 100%;
+    object-fit: cover;
+}
+
+/* Sections */
+/* Transparent backgrounds for sections containing cards */
+.services-preview, .portfolio-section, .quick-contact, .faq-section, .how-it-works, .pricing-section {
+    position: relative;
+    z-index: 8;
+    background-color: rgba(11, 12, 16, 0.7); /* Primary dark with 30% transparency */
+}
+
+/* Other sections remain solid */
+.cta-section, .footer, .booking-form-section { /* booking-form-section holds pricing-section so its solid*/
+    position: relative;
+    z-index: 8;
+    background-color: var(--primary-dark);
+}
+
+/* Specific background for portfolio-section if needed to override */
+.portfolio-section {
+    background-color: rgba(31, 40, 51, 0.7); /* Secondary dark with 30% transparency */
+}
+
+
+.section-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-bottom: 3rem;
+}
+
+/* Service Cards */
+.service-card {
+    background: var(--secondary-dark); /* Solid secondary-dark */
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    transition: all 0.4s ease;
+    border: 1px solid var(--secondary-dark); /* Solid border */
+    height: 100%;
+}
+
+.service-card:hover {
+    transform: translateY(-15px);
+    background: linear-gradient(145deg, var(--secondary-dark), var(--teal)); /* Solid gradient on hover */
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+}
+
+.service-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, var(--cyan), var(--teal));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--primary-dark);
+}
+
+.service-card h4 {
+    color: var(--cyan);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Portfolio */
+.portfolio-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    height: 300px;
+    cursor: pointer;
+    background: var(--secondary-dark); /* Solid secondary-dark */
+}
+
+.portfolio-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.portfolio-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(11,12,16,0.95), rgba(102,252,241,0.9));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.portfolio-card:hover .portfolio-overlay {
+    opacity: 1;
+}
+
+.portfolio-card:hover .portfolio-img {
+    transform: scale(1.1);
+}
+
+.portfolio-info h5 {
+    color: var(--primary-dark);
+    margin-bottom: 1rem;
+}
+
+.portfolio-btn {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, var(--cyan), var(--teal));
+    color: var(--primary-dark);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 252, 241, 0.3);
+    margin-bottom: 12px;
+}
+
+.portfolio-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102, 252, 241, 0.5);
+    color: var(--primary-dark);
+}
+
+.portfolio-desc {
+    color: var(--light-gray);
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.btn-cyan {
+    background: var(--cyan);
+    color: var(--primary-dark);
+    border: none;
+}
+
+.btn-cyan:hover {
+    background: var(--teal);
+    color: var(--primary-dark);
+}
+
+/* ── ANALYTICS ── */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
+.analytics-card{background:rgba(31,40,51,.85);border:1px solid rgba(102,252,241,.1);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .3s;}
+.analytics-card:hover{border-color:rgba(102,252,241,.28);}
+.analytics-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.06;}
+.analytics-card.c1{background:linear-gradient(135deg,rgba(37,211,102,.09) 0%, rgba(11,12,16,.09) 100%);}
+.analytics-card.c2{background:linear-gradient(135deg,rgba(255,169,77,.09) 0%, rgba(255,169,77,.09) 100%);}
+.analytics-card.c3{background:linear-gradient(135deg,rgba(105,219,124,.09) 0%, rgba(105,219,124,.09) 100%);}
+.analytics-card.c4{background:linear-gradient(135deg,rgba(255,77,109,.09) 0%, rgba(255,77,109,.09) 100%);}
+.analytics-icon{font-size:1.1rem;margin-bottom:12px;}
+.analytics-num{font-size:2rem;font-weight:700;color:var(--gray);font-family:var(--mono);line-height:1;}
+.analytics-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,198,199,.38);margin-top:6px;}
+.analytics-activity{margin-top:24px;}
+.analytics-activity h3{color:var(--cyan);font-size:1.1rem;margin-bottom:16px;font-family:var(--sans);}
+.analytics-activity table{width:100%;color:var(--gray);font-family:var(--mono);font-size:.75rem;border-collapse:collapse;}
+.analytics-activity th{padding:12px;text-align:left;background:rgba(102,252,241,.1);color:var(--gray);}
+.analytics-activity td{padding:20px;text-align:left;color:var(--gray);}
+.analytics-activity tr:hover{background:rgba(102,252,241,0.05);}
+
+.btn-seen{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:rgba(37,211,102,.09);border:1px solid rgba(37,211,102,.26);border-radius:10px;color:#25D366;font-family:var(--sans);font-size:.88rem;font-weight:600;text-decoration:none;transition:all .25s;}
+.btn-seen:hover{background:rgba(37,211,102,.16);color:#25D366;}
+.btn-delete{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.25);border-radius:10px;color:var(--danger);font-family:var(--sans);font-size:.88rem;font-weight:600;text-decoration:none;transition:all .25s;}
+.btn-delete:hover{background:rgba(255,77,109,.16);color:var(--danger);}
+/* Footer */
+
+
+.contact-item {
+    color: var(--light-gray);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.contact-item:hover {
+    color: var(--cyan);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-title { font-size: 2.5rem; }
+    .section-title { font-size: 2rem; }
+    .navbar-brand { font-size: 1.5rem; }
+    .hero-buttons .btn { display: block; margin-bottom: 1rem; width: 100%; }
+    
+    /* Mobile navbar fixes */
+    .navbar-nav.ms-auto {
+        margin-left: 0 !important;
+        text-align: center;
+    }
+    
+    .navbar-nav .nav-item {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .navbar-nav .nav-link {
+        margin: 0.25rem 0;
+        padding: 0.75rem 1rem;
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .navbar-collapse {
+        background-color: var(--secondary-dark);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+    }
+}
+
+/* ______________________________________________________________________*/
+/* Animation Styles */
+
+/* Neon Glow for Buttons */
+.btn-primary:hover, .btn-outline-light:hover, .btn-cyan:hover, .btn-whatsapp:hover, .btn-instagram-gradient:hover, .btn-email-gradient:hover {
+    box-shadow: 0 0 5px var(--cyan), 0 0 25px var(--cyan), 0 0 50px var(--cyan), 0 0 100px var(--cyan);
+}
+
+/* Adjustments for existing animations to be compatible with reveal */
+.service-card, .portfolio-card, .contact-card, .step-card, .price-card {
+    transition: all 0.4s ease, box-shadow 0.4s ease;
+}
+
+.portfolio-card:hover .portfolio-img {
+    transform: scale(1.05);
+}
+
+/* Booking Page Additions */
+.booking-hero {
+    background: linear-gradient(135deg, rgba(31, 40, 51, 0.7) 0%, rgba(11, 12, 16, 0.7) 100%); /* 30% Transparent gradient */
+    padding: 150px 0;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 8;
+}
+
+/* The booking-form-section holds the pricing-section */
+.booking-form-section {
+    padding: 100px 0;
+    background: var(--primary-dark); /* Keep this solid, as pricing-section will be transparent */
+    position: relative;
+    z-index: 8;
+}
+
+/* Apply transparency to the main form card itself */
+.booking-form .card {
+    background-color: rgba(31, 40, 51, 0.7); /* Secondary dark with 30% transparency */
+}
+
+.booking-form .form-control,
+.booking-form .form-select {
+    background-color: rgba(31, 40, 51, 0.7); /* Keep transparent form controls */
+    border: 1px solid rgba(69, 162, 158, 0.7); /* Keep transparent border */
+    color: var(--light-gray);
+}
+
+.booking-form .form-control:focus,
+.booking-form .form-select:focus {
+    background-color: rgba(31, 40, 51, 0.9); /* Slightly more opaque on focus */
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 0.2rem rgba(102, 252, 241, 0.25);
+}
+
+.btn-whatsapp {
+    background-color: #25D366 !important;
+    border-color: #25D366 !important;
+    color: white !important;
+}
+
+.btn-whatsapp:hover {
+    background-color: #128C7E !important;
+    border-color: #128C7E !important;
+    color: white !important;
+    box-shadow: 0 0 5px #25D366, 0 0 25px #25D366, 0 0 50px #25D366 !important;
+}
+.pricing-section {
+    background: linear-gradient(
+        180deg,
+        rgba(31, 40, 51, 0.95),
+        rgba(11, 12, 16, 1)
+    );
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at 30% 40%,
+        rgba(102,252,241,0.08),
+        transparent 60%
+    );
+    pointer-events: none;
+}
+
+.price-card {
+    background: rgba(31, 40, 51, 0.85);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(102,252,241,0.15);
+    transition: all 0.4s cubic-bezier(.2,.8,.2,1);
+    position: relative;
+    overflow: hidden;
+}
+
+.price-card.popular {
+    border: 2px solid #66FCF1;
+    box-shadow:
+        0 0 25px rgba(102,252,241,0.4),
+        0 20px 50px rgba(0,0,0,0.6);
+    transform: scale(1.05);
+}
+.price-card::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 20px;
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(102,252,241,0.3),
+        transparent
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.price-card:hover::before {
+    opacity: 1;
+}
+
+.price-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    border-color: rgba(102,252,241,0.4);
+    box-shadow:
+        0 20px 40px rgba(0,0,0,0.6),
+        0 0 30px rgba(102,252,241,0.2);
+}
+
+.price-card .price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--cyan);
+    margin: 1rem 0;
+}
+
+.service-selector {
+    background: var(--secondary-dark); /* Solid secondary-dark */
+    border-radius: 15px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.service-selector:hover {
+    border-color: var(--cyan);
+}
+
+.nav-link.active {
+    color: var(--cyan) !important;
+}
+
+/* Help Page Styles */
+.help-hero {
+    background: linear-gradient(135deg, rgba(11, 12, 16, 0.7) 0%, rgba(31, 40, 51, 0.7) 100%); /* 30% Transparent gradient */
+    padding: 150px 0 100px;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 8;
+}
+
+/* Quick Contact section background */
+.quick-contact {
+    padding: 100px 0;
+    background-color: rgba(11, 12, 16, 0.7); /* Primary dark with 30% transparency */
+    position: relative;
+    z-index: 8;
+}
+
+.contact-card {
+    background: var(--secondary-dark); /* Solid secondary-dark */
+    border-radius: 20px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.contact-card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.contact-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, var(--cyan), var(--teal));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--primary-dark);
+}
+
+.contact-icon.instagram { background: linear-gradient(45deg, #E4405F, #F77737); color: white; }
+.contact-icon.email { background: linear-gradient(45deg, #EA4335, #4285F4); color: white; }
+.contact-icon.whatsapp { background: #25D366; color: white; }
+
+.qr-code {
+    max-width: 180px;
+    height: 180px;
+    margin: 1rem auto;
+}
+
+.faq-section .accordion-button {
+    background: var(--secondary-dark); /* Solid secondary-dark */
+    color: var(--light-gray);
+    border: 1px solid var(--secondary-dark); /* Solid border */
+    font-weight: 500;
+    transition: background 0.4s ease-in-out, color 0.4s ease-in-out;
+}
+
+.faq-section .accordion-button:not(.collapsed) {
+    background: linear-gradient(90deg, var(--teal), var(--cyan));
+    color: var(--primary-dark);
+}
+
+.faq-section .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(102, 252, 241, 0.25);
+}
+
+.step-card {
+    background: var(--secondary-dark); /* Solid secondary-dark */
+    padding: 2rem 1.5rem;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.step-card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-5px);
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(45deg, var(--cyan), var(--teal));
+    color: var(--primary-dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+}
+
+.how-it-works {
+    padding: 100px 0;
+    background: var(--primary-dark); /* Solid primary dark */
+    position: relative;
+    z-index: 8;
+}
+
+.cta-section {
+    background: linear-gradient(135deg, var(--secondary-dark), var(--primary-dark));
+    position: relative;
+    z-index: 8;
+}
+
+/* Footer — was missing entirely */
+.footer {
+    background-color: var(--secondary-dark);
+    padding: 3rem 0 1.5rem;
+    position: relative;
+    z-index: 8;
+}
+
+.footer a {
+    color: var(--light-gray);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: var(--cyan);
+}
+
+/* WhatsApp floating button injected by script.js — was missing */
+.whatsapp-float {
+    position: fixed;
+    bottom: 70px;
+    right: 28px;
+    background: #25D366;
+    color: white !important;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    box-shadow: 0 4px 18px rgba(37,211,102,0.45);
+    z-index: 999;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.whatsapp-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 5px #25D366, 0 0 25px #25D366;
+    color: white !important;
+}
+
+/* Stat numbers on About page — was missing */
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+/* Mission points on About page — was missing */
+.mission-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+/* Neural background iframe — was missing */
+.neural-background-iframe {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    z-index: -1;
+    pointer-events: none;
+    transform: scale(1.3);
+}
+
+/* Form controls global dark styling — was missing */
+.form-control,
+.form-select {
+    background-color: var(--secondary-dark);
+    border: 1px solid var(--teal);
+    color: var(--light-gray);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--secondary-dark);
+    border-color: var(--cyan);
+    color: var(--light-gray);
+    box-shadow: 0 0 0 0.2rem rgba(102,252,241,0.25);
+}
+
+.form-control::placeholder {
+    color: rgba(197,198,199,0.4);
+}
+
+/* Accordion toggle icon — Bootstrap's default is dark, invert for dark bg */
+.accordion-button::after {
+    filter: invert(1) brightness(1.5);
+}
+
+/* Gradient button variants — were missing */
+.btn-instagram-gradient {
+    background: linear-gradient(45deg, #E4405F, #F77737);
+    border: none;
+    color: white;
+}
+
+.btn-instagram-gradient:hover { color: white; }
+
+.btn-email-gradient {
+    background: linear-gradient(45deg, #EA4335, #4285F4);
+    border: none;
+    color: white;
+}
+
+.btn-email-gradient:hover { color: white; }
+
+/* Price card list items — was missing */
+.price-card li {
+    color: var(--light-gray);
+    padding: 4px 0;
+}
+
+/* text-cyan utility — was missing global declaration */
+.text-cyan {
+    color: var(--cyan) !important;
+}
+
+/* select option dark bg fix */
+.form-select option {
+    background-color: var(--secondary-dark);
+    color: var(--light-gray);
+}
+.service-card,
+.portfolio-card,
+.contact-card,
+.step-card,
+.price-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.service-card::before,
+.portfolio-card::before,
+.contact-card::before,
+.step-card::before,
+.price-card::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(circle at center,
+        rgba(102,252,241,0.08),
+        transparent 60%);
+    transform: rotate(0deg);
+    transition: opacity 0.4s ease;
+    opacity: 0;
+}
+
+.service-card:hover::before,
+.portfolio-card:hover::before,
+.contact-card:hover::before,
+.step-card:hover::before,
+.price-card:hover::before {
+    opacity: 1;
+}

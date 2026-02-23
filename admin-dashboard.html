@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — TN WEB RATS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0C10;--dark:#1F2833;--panel:#16202A;--gray:#C5C6C7;--cyan:#66FCF1;--teal:#45A29E;--danger:#ff4d6d;--warn:#ffa94d;--success:#69db7c;--mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;--sidebar:240px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:var(--sans);color:var(--gray);min-height:100vh;overflow-x:hidden;}
+
+/* ── LAYOUT ── */
+.layout{display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);background:rgba(22,32,42,.98);border-right:1px solid rgba(102,252,241,.09);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;transition:transform .3s;}
+.sidebar.collapsed{transform:translateX(calc(-1 * var(--sidebar)));}
+.sb-brand{padding:22px 20px 18px;border-bottom:1px solid rgba(102,252,241,.08);display:flex;align-items:center;gap:11px;}
+.sb-brand img{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--cyan);box-shadow:0 0 12px rgba(102,252,241,.25);}
+.sb-brand .bname{font-family:var(--mono);font-size:.72rem;color:var(--cyan);letter-spacing:.15em;}
+.sb-brand .brole{font-family:var(--mono);font-size:.58rem;color:rgba(197,198,199,.35);letter-spacing:.1em;text-transform:uppercase;}
+.sb-nav{flex:1;overflow-y:auto;padding:14px 0;}
+.sb-section{font-family:var(--mono);font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(197,198,199,.28);padding:10px 20px 6px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 20px;color:rgba(197,198,199,.5);font-size:.88rem;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .2s;text-decoration:none;border-left:2px solid transparent;}
+.sb-item i{width:16px;text-align:center;font-size:.9rem;color:rgba(102,252,241,.3);transition:color .2s;}
+.sb-item:hover{color:var(--gray);background:rgba(102,252,241,.04);border-left-color:rgba(102,252,241,.2);}
+.sb-item:hover i{color:var(--cyan);}
+.sb-item.active{color:var(--cyan);background:rgba(102,252,241,.07);border-left-color:var(--cyan);}
+.sb-item.active i{color:var(--cyan);}
+.sb-badge{margin-left:auto;background:rgba(102,252,241,.15);color:var(--cyan);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:8px;letter-spacing:.05em;}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(102,252,241,.08);}
+.sb-user{display:flex;align-items:center;gap:10px;}
+.sb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(102,252,241,.1);border:1px solid rgba(102,252,241,.25);display:flex;align-items:center;justify-content:center;color:var(--cyan);font-size:.8rem;flex-shrink:0;}
+.sb-uname{font-size:.82rem;font-weight:600;color:var(--gray);}
+.sb-urole{font-family:var(--mono);font-size:.58rem;color:rgba(197,198,199,.35);text-transform:uppercase;letter-spacing:.08em;}
+.btn-logout{margin-left:auto;background:none;border:none;color:rgba(255,77,109,.45);cursor:pointer;font-size:.85rem;transition:color .2s;padding:4px;}
+.btn-logout:hover{color:var(--danger);}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .3s;}
+.main.expanded{margin-left:0;}
+
+/* ── TOPBAR ── */
+.topbar{background:rgba(22,32,42,.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(102,252,241,.08);padding:14px 28px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;}
+.btn-toggle{background:none;border:none;color:rgba(197,198,199,.45);cursor:pointer;font-size:1.1rem;transition:color .2s;padding:4px 8px;}
+.btn-toggle:hover{color:var(--cyan);}
+.topbar-title{font-size:1.1rem;font-weight:700;color:var(--gray);letter-spacing:.05em;}
+.topbar-title span{color:var(--cyan);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px;}
+.topbar-time{font-family:var(--mono);font-size:.68rem;color:rgba(197,198,199,.35);letter-spacing:.1em;}
+.btn-new-order{display:flex;align-items:center;gap:7px;padding:9px 18px;background:linear-gradient(90deg,var(--teal),var(--cyan));border:none;border-radius:8px;color:var(--bg);font-family:var(--sans);font-size:.82rem;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:transform .2s,box-shadow .3s;}
+.btn-new-order:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,252,241,.28);}
+
+/* ── CONTENT ── */
+.content{padding:28px;flex:1;}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:rgba(31,40,51,.85);border:1px solid rgba(102,252,241,.1);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .3s;}
+.stat-card:hover{border-color:rgba(102,252,241,.28);}
+.stat-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.06;}
+.stat-card.c1::before{background:var(--cyan);}
+.stat-card.c2::before{background:var(--warn);}
+.stat-card.c3::before{background:var(--success);}
+.stat-card.c4::before{background:var(--danger);}
+.stat-icon{font-size:1.1rem;margin-bottom:12px;}
+.stat-card.c1 .stat-icon{color:var(--cyan);}
+.stat-card.c2 .stat-icon{color:var(--warn);}
+.stat-card.c3 .stat-icon{color:var(--success);}
+.stat-card.c4 .stat-icon{color:var(--danger);}
+.stat-num{font-size:2rem;font-weight:700;color:var(--gray);font-family:var(--mono);line-height:1;}
+.stat-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,198,199,.38);margin-top:6px;}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:180px;}
+.search-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(102,252,241,.28);font-size:.82rem;}
+.search-input{width:100%;padding:10px 14px 10px 38px;background:rgba(31,40,51,.85);border:1px solid rgba(102,252,241,.12);border-radius:9px;color:var(--gray);font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .3s;}
+.search-input:focus{border-color:rgba(102,252,241,.4);}
+.search-input::placeholder{color:rgba(197,198,199,.22);}
+.filter-select{padding:10px 14px;background:rgba(31,40,51,.85);border:1px solid rgba(102,252,241,.12);border-radius:9px;color:var(--gray);font-family:var(--sans);font-size:.85rem;outline:none;cursor:pointer;}
+.filter-select option{background:var(--dark);}
+.filter-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-pill{padding:7px 14px;background:rgba(31,40,51,.7);border:1px solid rgba(102,252,241,.1);border-radius:20px;color:rgba(197,198,199,.45);font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.filter-pill:hover{border-color:rgba(102,252,241,.3);color:var(--gray);}
+.filter-pill.active{border-color:var(--cyan);background:rgba(102,252,241,.07);color:var(--cyan);}
+
+/* ── ORDERS TABLE ── */
+.orders-wrap{background:rgba(22,32,42,.85);border:1px solid rgba(102,252,241,.09);border-radius:16px;overflow:hidden;}
+.orders-header{display:grid;grid-template-columns:90px 1fr 110px 110px 120px 120px 80px;padding:12px 20px;border-bottom:1px solid rgba(102,252,241,.08);font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(197,198,199,.32);}
+.order-row{display:grid;grid-template-columns:90px 1fr 110px 110px 120px 120px 80px;padding:15px 20px;border-bottom:1px solid rgba(102,252,241,.05);align-items:center;cursor:pointer;transition:background .2s;}
+.order-row:last-child{border-bottom:none;}
+.order-row:hover{background:rgba(102,252,241,.04);}
+.order-row.selected{background:rgba(102,252,241,.07);border-left:3px solid var(--cyan);}
+.col-ref{font-family:var(--mono);font-size:.72rem;color:var(--cyan);letter-spacing:.06em;}
+.col-client{}
+.col-client .cname{font-size:.92rem;font-weight:600;color:var(--gray);}
+.col-client .csub{font-family:var(--mono);font-size:.62rem;color:rgba(197,198,199,.38);margin-top:1px;}
+.col-service{font-size:.82rem;font-weight:600;color:var(--gray);}
+.col-price{font-family:var(--mono);font-size:.82rem;color:var(--cyan);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-weight:400;}
+.badge-new{background:rgba(102,252,241,.1);color:var(--cyan);border:1px solid rgba(102,252,241,.2);}
+.badge-progress{background:rgba(255,169,77,.1);color:var(--warn);border:1px solid rgba(255,169,77,.25);}
+.badge-review{background:rgba(102,155,252,.1);color:#66b3fc;border:1px solid rgba(102,155,252,.25);}
+.badge-delivered{background:rgba(105,219,124,.1);color:var(--success);border:1px solid rgba(105,219,124,.25);}
+.badge-cancelled{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.25);}
+.badge-pending{background:rgba(255,169,77,.1);color:var(--warn);border:1px solid rgba(255,169,77,.25);}
+.badge-half{background:rgba(102,252,241,.1);color:var(--teal);border:1px solid rgba(102,252,241,.18);}
+.badge-full{background:rgba(105,219,124,.1);color:var(--success);border:1px solid rgba(105,219,124,.25);}
+.col-action{text-align:center;}
+.btn-view{background:none;border:1px solid rgba(102,252,241,.18);border-radius:7px;color:rgba(102,252,241,.5);padding:6px 10px;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.btn-view:hover{border-color:var(--cyan);color:var(--cyan);}
+.empty-state{text-align:center;padding:60px 20px;font-family:var(--mono);font-size:.75rem;color:rgba(197,198,199,.3);letter-spacing:.15em;}
+.empty-state i{font-size:2.5rem;color:rgba(102,252,241,.15);margin-bottom:14px;display:block;}
+
+/* ── DETAIL PANEL ── */
+.detail-overlay{position:fixed;inset:0;background:rgba(11,12,16,.65);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s;}
+.detail-overlay.show{opacity:1;pointer-events:all;}
+.detail-panel{position:fixed;top:0;right:0;width:520px;max-width:100vw;height:100vh;background:rgba(22,32,42,.98);backdrop-filter:blur(18px);border-left:1px solid rgba(102,252,241,.12);z-index:301;overflow-y:auto;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);}
+.detail-panel.show{transform:translateX(0);}
+.dp-header{padding:22px 24px;border-bottom:1px solid rgba(102,252,241,.09);display:flex;align-items:center;gap:14px;position:sticky;top:0;background:rgba(22,32,42,.98);backdrop-filter:blur(10px);z-index:1;}
+.dp-ref{font-family:var(--mono);font-size:.75rem;color:var(--cyan);letter-spacing:.1em;}
+.dp-close{margin-left:auto;background:none;border:none;color:rgba(197,198,199,.4);cursor:pointer;font-size:1.1rem;transition:color .2s;padding:4px;}
+.dp-close:hover{color:var(--danger);}
+.dp-body{padding:22px 24px;}
+.dp-section{margin-bottom:24px;}
+.dp-section-title{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(102,252,241,.6);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+.dp-section-title::after{content:'';flex:1;height:1px;background:rgba(102,252,241,.1);}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.info-item{}
+.info-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,198,199,.32);margin-bottom:3px;}
+.info-val{font-size:.88rem;font-weight:600;color:var(--gray);}
+.info-val.hl{color:var(--cyan);}
+.info-val.full-width{grid-column:span 2;font-size:.82rem;font-weight:400;color:rgba(197,198,199,.65);line-height:1.6;background:rgba(11,12,16,.5);border:1px solid rgba(102,252,241,.08);border-radius:8px;padding:12px 14px;}
+
+/* Edit fields in panel */
+.dp-field{margin-bottom:14px;}
+.dp-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(197,198,199,.38);margin-bottom:6px;display:block;}
+.dp-select,.dp-input,.dp-textarea{width:100%;padding:9px 12px;background:rgba(11,12,16,.72);border:1px solid rgba(102,252,241,.12);border-radius:8px;color:var(--gray);font-family:var(--sans);font-size:.88rem;outline:none;transition:border-color .3s;}
+.dp-select:focus,.dp-input:focus,.dp-textarea:focus{border-color:rgba(102,252,241,.4);}
+.dp-select option{background:var(--dark);}
+.dp-textarea{resize:vertical;min-height:80px;}
+.dp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dp-check-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(11,12,16,.5);border:1px solid rgba(102,252,241,.1);border-radius:8px;cursor:pointer;margin-bottom:10px;}
+.dp-check-box{width:18px;height:18px;border:2px solid rgba(102,252,241,.25);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.dp-check-row.checked .dp-check-box{background:var(--cyan);border-color:var(--cyan);}
+.dp-check-box i{color:var(--bg);font-size:.58rem;display:none;}
+.dp-check-row.checked .dp-check-box i{display:block;}
+.dp-check-text{font-size:.85rem;font-weight:600;color:rgba(197,198,199,.6);}
+.dp-check-row.checked .dp-check-text{color:var(--gray);}
+
+.btn-save{width:100%;padding:12px;background:linear-gradient(90deg,var(--teal),var(--cyan));border:none;border-radius:9px;color:var(--bg);font-family:var(--sans);font-size:.95rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:transform .2s,box-shadow .3s;margin-top:8px;}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,252,241,.28);}
+.btn-delete{width:100%;padding:11px;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);border-radius:9px;color:var(--danger);font-family:var(--sans);font-size:.88rem;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-delete:hover{background:rgba(255,77,109,.15);border-color:var(--danger);}
+
+/* Save toast */
+/* ══ VIEW PANELS ══════════════════════════════════════ */
+.view-panel{display:none;}
+.view-panel.active{display:block;animation:fadeUp .35s ease both;}
+
+/* Panel topbar — same height/rhythm as the stats grid area */
+.panel-topbar{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  margin-bottom:24px;
+  padding-bottom:20px;
+  border-bottom:1px solid rgba(102,252,241,.08);
+}
+.panel-title-group{}
+.panel-title{font-size:1.25rem;font-weight:700;color:var(--gray);letter-spacing:.05em;margin:0 0 4px;}
+.panel-title span{color:var(--cyan);}
+.panel-subtitle{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;color:rgba(197,198,199,.32);text-transform:lowercase;}
+
+/* Generate / action button — same as .btn-new-order */
+.btn-gen{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;
+  background:linear-gradient(90deg,var(--teal),var(--cyan));
+  border:none;border-radius:8px;
+  color:var(--bg);font-family:var(--sans);font-size:.82rem;font-weight:700;letter-spacing:.06em;
+  cursor:pointer;white-space:nowrap;
+  transition:transform .2s,box-shadow .3s;
+}
+.btn-gen:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,252,241,.28);}
+
+/* ══ KEYS GRID ══════════════════════════════════════════ */
+.keys-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px;
+}
+.key-card{
+  background:rgba(22,32,42,.85);
+  border:1px solid rgba(102,252,241,.1);
+  border-radius:14px;padding:20px 22px;
+  position:relative;transition:border-color .3s,transform .2s;
+}
+.key-card:hover{border-color:rgba(102,252,241,.28);transform:translateY(-2px);}
+.key-card.used   {opacity:.55;border-color:rgba(197,198,199,.07);pointer-events:none;}
+.key-card.revoked{opacity:.42;border-color:rgba(255,77,109,.12);pointer-events:none;}
+
+.key-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.key-val{
+  font-family:var(--mono);font-size:.85rem;color:var(--cyan);
+  letter-spacing:.12em;word-break:break-all;
+}
+.key-card.used    .key-val{color:rgba(197,198,199,.35);}
+.key-card.revoked .key-val{color:rgba(255,77,109,.4);text-decoration:line-through;}
+
+/* Reuse existing .badge classes already in the file */
+.key-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.key-badge.kb-active {background:rgba(102,252,241,.1); color:var(--cyan);  border:1px solid rgba(102,252,241,.22);}
+.key-badge.kb-used   {background:rgba(197,198,199,.07);color:rgba(197,198,199,.4);border:1px solid rgba(197,198,199,.12);}
+.key-badge.kb-revoked{background:rgba(255,77,109,.08); color:var(--danger); border:1px solid rgba(255,77,109,.2);}
+
+.key-meta{
+  font-family:var(--mono);font-size:.63rem;
+  color:rgba(197,198,199,.32);letter-spacing:.06em;
+  line-height:1.85;margin-bottom:14px;
+  padding:10px 12px;
+  background:rgba(11,12,16,.35);
+  border-radius:8px;
+  border:1px solid rgba(102,252,241,.05);
+}
+.key-meta b{color:rgba(197,198,199,.52);}
+
+.key-actions{display:flex;gap:8px;}
+.btn-copy-key{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 12px;
+  background:rgba(102,252,241,.06);border:1px solid rgba(102,252,241,.16);
+  border-radius:8px;color:var(--cyan);
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;
+  cursor:pointer;transition:all .2s;
+}
+.btn-copy-key:hover{background:rgba(102,252,241,.13);border-color:rgba(102,252,241,.35);}
+.btn-revoke-key{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 14px;
+  background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.18);
+  border-radius:8px;color:var(--danger);
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.07em;
+  cursor:pointer;transition:all .2s;
+}
+.btn-revoke-key:hover{background:rgba(255,77,109,.13);border-color:rgba(255,77,109,.4);}
+
+.gen-key-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.gen-role-select{
+  padding:10px 14px;
+  background:rgba(11,12,16,.75);
+  border:1px solid rgba(102,252,241,.2);
+  border-radius:8px;
+  color:var(--cyan);
+  font-family:var(--mono);
+  font-size:.72rem;
+  letter-spacing:.08em;
+  outline:none;
+  cursor:pointer;
+  transition:border-color .3s;
+  -webkit-appearance:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2366FCF1' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  padding-right:32px;
+  min-width:140px;
+}
+.gen-role-select:focus{border-color:var(--cyan);}
+.gen-role-select option{background:var(--dark);color:var(--gray);}
+
+/* Role tag shown on key card */
+.key-role-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;
+  background:rgba(69,162,158,.1);color:var(--teal);
+  border:1px solid rgba(69,162,158,.25);
+  width:fit-content;margin-top:6px;
+}
+.keys-empty{
+  grid-column:1/-1;
+  text-align:center;padding:56px 20px;
+  font-family:var(--mono);font-size:.72rem;
+  color:rgba(197,198,199,.28);letter-spacing:.15em;line-height:2;
+}
+.keys-empty i{font-size:2.4rem;color:rgba(102,252,241,.1);margin-bottom:16px;display:block;}
+
+/* ══ TEAM GRID ══════════════════════════════════════════ */
+.team-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:14px;
+}
+.team-card{
+  background:rgba(22,32,42,.85);
+  border:1px solid rgba(102,252,241,.1);
+  border-radius:14px;padding:22px;
+  display:flex;flex-direction:column;gap:0;
+  transition:border-color .3s,transform .2s;
+}
+.team-card:hover{border-color:rgba(102,252,241,.28);transform:translateY(-2px);}
+.team-avatar{
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;margin-bottom:14px;
+  border:2px solid rgba(102,252,241,.22);
+  background:rgba(102,252,241,.08);color:var(--cyan);
+}
+.team-name {font-size:.97rem;font-weight:700;color:var(--gray);margin-bottom:2px;}
+.team-email{font-family:var(--mono);font-size:.63rem;color:rgba(197,198,199,.38);margin-bottom:10px;word-break:break-all;}
+.team-role {
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:.6rem;
+  text-transform:uppercase;letter-spacing:.1em;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(102,252,241,.07);color:var(--cyan);
+  border:1px solid rgba(102,252,241,.16);
+  width:fit-content;
+}
+.team-joined{font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.25);margin-top:auto;padding-top:12px;letter-spacing:.07em;}
+
+.toast-msg{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(102,252,241,.12);border:1px solid rgba(102,252,241,.3);color:var(--cyan);font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;padding:10px 22px;border-radius:22px;z-index:999;opacity:0;transition:all .3s;pointer-events:none;}
+.toast-msg.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── NEW ORDER MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,12,16,.75);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal-box{background:rgba(22,32,42,.98);border:1px solid rgba(102,252,241,.15);border-radius:18px;width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:30px;animation:fadeUp .3s ease both;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.modal-header h3{font-size:1.2rem;font-weight:700;color:var(--gray);letter-spacing:.05em;}
+.modal-header h3 span{color:var(--cyan);}
+.modal-close{background:none;border:none;color:rgba(197,198,199,.4);font-size:1.1rem;cursor:pointer;padding:4px;transition:color .2s;}
+.modal-close:hover{color:var(--danger);}
+.m-field{margin-bottom:16px;}
+.m-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(197,198,199,.38);margin-bottom:6px;display:block;}
+.m-ctrl{width:100%;padding:11px 13px;background:rgba(11,12,16,.75);border:1px solid rgba(102,252,241,.12);border-radius:9px;color:var(--gray);font-family:var(--sans);font-size:.9rem;outline:none;transition:border-color .3s;}
+.m-ctrl:focus{border-color:rgba(102,252,241,.4);}
+.m-ctrl option{background:var(--dark);}
+.m-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+textarea.m-ctrl{resize:vertical;min-height:80px;}
+.btn-modal-save{width:100%;padding:13px;background:linear-gradient(90deg,var(--teal),var(--cyan));border:none;border-radius:9px;color:var(--bg);font-family:var(--sans);font-size:.95rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:transform .2s,box-shadow .3s;margin-top:6px;}
+.btn-modal-save:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,252,241,.28);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  :root{--sidebar:220px;}
+  .orders-header,.order-row{grid-template-columns:80px 1fr 100px 90px;} 
+  .orders-header .h-pay,.order-row .col-pay,
+  .orders-header .h-del,.order-row .col-del{display:none;}
+  .detail-panel{width:100vw;}
+}
+@media(max-width:600px){
+  .main{margin-left:0!important;}
+  .sidebar{transform:translateX(calc(-1 * var(--sidebar)));}
+  .sidebar.open{transform:translateX(0);}
+  .content{padding:16px;}
+  .orders-header{display:none;}
+  .order-row{grid-template-columns:1fr auto;padding:12px 14px;gap:8px;}
+  .col-ref,.col-price,.col-action{display:none;}
+  .m-row{grid-template-columns:1fr;}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+</style>
+
+<style>
+.neural-background-iframe {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    z-index: 0;
+    pointer-events: none;
+}
+</style>
+
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <img src="RATTY.png" alt="logo" onerror="this.style.display='none'">
+    <div><div class="bname">TN WEB RATS</div><div class="brole">Admin Portal</div></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a class="sb-item active" href="#" data-view="orders"><i class="fas fa-list-check"></i> Orders <span class="sb-badge" id="sbCount">0</span></a>
+    <a class="sb-item" href="#" data-view="stats"><i class="fas fa-chart-line"></i> Analytics</a>
+    <div class="sb-section">Admin</div>
+    <a class="sb-item" href="admin-signup.html" target="_blank"><i class="fas fa-user-plus"></i> Add Admin</a>
+    <a class="sb-item" href="#" data-view="invitekeys"><i class="fas fa-key"></i> Invite Keys</a>
+    <a class="sb-item" href="#" data-view="admins"><i class="fas fa-users-cog"></i> Team</a>
+    <div class="sb-section">Site</div>
+    <a class="sb-item" href="index.html" target="_blank"><i class="fas fa-external-link-alt"></i> View Site</a>
+    <a class="sb-item" href="book.html" target="_blank"><i class="fas fa-bookmark"></i> Booking Form</a>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar"><i class="fas fa-user"></i></div>
+      <div><div class="sb-uname" id="sbName">Admin</div><div class="sb-urole" id="sbRole">superadmin</div></div>
+      <button class="btn-logout" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main" id="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="btn-toggle" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+    <div class="topbar-title">Order <span>Management</span></div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+      <button class="btn-new-order" id="btnNewOrder"><i class="fas fa-plus me-1"></i> New Order</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+<div class="content">
+
+  <!-- ───────────────────────────── -->
+  <!-- ORDERS VIEW -->
+  <!-- ───────────────────────────── -->
+  <div class="view-panel active" id="view-orders">
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card c1">
+        <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+        <div class="stat-num" id="s-total">0</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-card c2">
+        <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-num" id="s-active">0</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card c3">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-num" id="s-done">0</div>
+        <div class="stat-label">Delivered</div>
+      </div>
+      <div class="stat-card c4">
+        <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+        <div class="stat-num" id="s-revenue">₹0</div>
+        <div class="stat-label">Est. Revenue</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input class="search-input" type="text" id="searchInput" placeholder="Search by name, ref, service…">
+      </div>
+
+      <select class="filter-select" id="filterService">
+        <option value="">All Services</option>
+        <option>Basic PPT</option>
+        <option>Pro PPT</option>
+        <option>Poster Pack</option>
+        <option>Website Design</option>
+        <option>Custom / Not Sure</option>
+      </select>
+
+      <div class="filter-pills">
+        <div class="filter-pill active" data-status="">All</div>
+        <div class="filter-pill" data-status="new">New</div>
+        <div class="filter-pill" data-status="in-progress">In Progress</div>
+        <div class="filter-pill" data-status="review">Review</div>
+        <div class="filter-pill" data-status="delivered">Delivered</div>
+        <div class="filter-pill" data-status="cancelled">Cancelled</div>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="orders-wrap">
+      <div class="orders-header">
+        <div>Ref</div>
+        <div>Client</div>
+        <div>Service</div>
+        <div>Price</div>
+        <div class="h-pay">Payment</div>
+        <div class="h-del">Status</div>
+        <div></div>
+      </div>
+      <div id="ordersList"></div>
+    </div>
+
+  </div> <!-- ✅ PROPERLY CLOSED view-orders -->
+
+
+  <!-- ───────────────────────────── -->
+  <!-- INVITE KEYS VIEW -->
+  <!-- ───────────────────────────── -->
+  <div class="view-panel" id="view-invitekeys">
+    <div class="panel-topbar">
+      <div class="panel-title-group">
+        <h2 class="panel-title">Invite <span>Keys</span></h2>
+        <div class="panel-subtitle">// each key works once · share privately · revoke anytime</div>
+      </div>
+
+      <div class="gen-key-row">
+        <select class="gen-role-select" id="genRoleSelect">
+          <option value="manager">Manager</option>
+          <option value="designer">Designer</option>
+          <option value="support">Support</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+        <button class="btn-gen" id="btnGenKey">
+          <i class="fas fa-key me-2"></i>Generate Key
+        </button>
+      </div>
+    </div>
+
+    <div class="keys-grid" id="keysGrid">
+      <div class="keys-empty">
+        <i class="fas fa-key"></i>
+        // no invite keys yet<br>
+        click "Generate New Key" to create one
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ───────────────────────────── -->
+  <!-- TEAM VIEW -->
+  <!-- ───────────────────────────── -->
+  <div class="view-panel" id="view-admins">
+    <div class="panel-topbar">
+      <div class="panel-title-group">
+        <h2 class="panel-title">Team <span>Members</span></h2>
+        <div class="panel-subtitle">all registered admins and their roles</div>
+      </div>
+
+      <a href="admin-signup.html" target="_blank" class="btn-gen" style="text-decoration:none;">
+        <i class="fas fa-user-plus me-2"></i>Add Member
+      </a>
+    </div>
+
+    <div class="team-grid" id="teamGrid">
+      <div class="keys-empty">
+        <i class="fas fa-users"></i>
+        no team members yet
+      </div>
+    </div>
+  </div>
+
+</div> <!-- /content -->
+<!-- ── DETAIL PANEL ── -->
+<div class="detail-overlay" id="detailOverlay"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-header">
+    <div><div class="dp-ref" id="dpRef">—</div><div style="font-size:.75rem;font-weight:600;color:var(--gray);margin-top:3px;" id="dpName">—</div></div>
+    <button class="dp-close" id="dpClose"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="dp-body">
+
+    <!-- Read-only info -->
+    <div class="dp-section">
+      <div class="dp-section-title"><i class="fas fa-tag"></i> Service Request</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Service</div><div class="info-val hl" id="dpService">—</div></div>
+        <div class="info-item"><div class="info-label">Price</div><div class="info-val hl" id="dpPrice">—</div></div>
+        <div class="info-item"><div class="info-label">Deadline</div><div class="info-val" id="dpDeadline">—</div></div>
+        <div class="info-item"><div class="info-label">Budget</div><div class="info-val" id="dpBudget">—</div></div>
+        <div class="info-item" style="grid-column:span 2;"><div class="info-label">Description</div><div class="info-val full-width" id="dpDetails">—</div></div>
+        <div class="info-item"><div class="info-label">Urgent</div><div class="info-val" id="dpUrgent">—</div></div>
+        <div class="info-item"><div class="info-label">Submitted</div><div class="info-val" id="dpDate">—</div></div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title"><i class="fas fa-user"></i> Contact Info</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Name</div><div class="info-val" id="dpClientName">—</div></div>
+        <div class="info-item"><div class="info-label">Phone / WhatsApp</div><div class="info-val hl" id="dpPhone">—</div></div>
+        <div class="info-item"><div class="info-label">Email</div><div class="info-val" id="dpEmail">—</div></div>
+        <div class="info-item"><div class="info-label">Found us via</div><div class="info-val" id="dpSource">—</div></div>
+      </div>
+    </div>
+
+    <!-- Admin editable fields -->
+    <div class="dp-section">
+      <div class="dp-section-title"><i class="fas fa-sliders-h"></i> Admin Controls</div>
+
+      <div class="dp-row">
+        <div class="dp-field">
+          <label class="dp-label">Delivery Status</label>
+          <select class="dp-select" id="editStatus">
+            <option value="new">New</option>
+            <option value="in-progress">In Progress</option>
+            <option value="review"> Client Review</option>
+            <option value="delivered"> Delivered</option>
+            <option value="cancelled"> Cancelled</option>
+          </select>
+        </div>
+        <div class="dp-field">
+          <label class="dp-label">Payment Status</label>
+          <select class="dp-select" id="editPayment">
+            <option value="pending">Pending</option>
+            <option value="half"> Half Paid</option>
+            <option value="full"> Full Paid</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dp-row">
+        <div class="dp-field">
+          <label class="dp-label">Amount Received (₹)</label>
+          <input class="dp-input" type="number" id="editAmountPaid" placeholder="0" min="0">
+        </div>
+        <div class="dp-field">
+          <label class="dp-label">Assigned To</label>
+          <input class="dp-input" type="text" id="editAssigned" placeholder="Team member name">
+        </div>
+      </div>
+
+      <div class="dp-field">
+        <label class="dp-label">Referral ID <span style="opacity:.4;font-size:.85em;">(if any)</span></label>
+        <input class="dp-input" type="text" id="editReferral" placeholder="e.g. REF-FRIEND-XY">
+      </div>
+
+      <div class="dp-field">
+        <label class="dp-label">Discount Applied (%)</label>
+        <input class="dp-input" type="number" id="editDiscount" placeholder="0" min="0" max="100">
+      </div>
+
+      <div class="dp-check-row" id="editRegularCheck">
+        <div class="dp-check-box"><i class="fas fa-check"></i></div>
+        <div class="dp-check-text">Regular / Repeat Customer</div>
+      </div>
+
+      <div class="dp-field">
+        <label class="dp-label">Internal Notes</label>
+        <textarea class="dp-textarea" id="editNotes" placeholder="Add internal notes for the team…"></textarea>
+      </div>
+
+      <button class="btn-save" id="btnSaveOrder">
+        <span class="btn-text"><i class="fas fa-save me-2"></i> Save Changes</span>
+        <span class="btn-loader"><i class="fas fa-circle-notch spin"></i>&nbsp;Saving...</span>
+      </button>
+      <button class="btn-seen" id="btnMarkSeen">
+        <span class="btn-text"><i class="fas fa-eye me-2"></i> Mark as Seen</span>
+      <button class="btn-delete" id="btnDeleteOrder">
+        <span class="btn-text"><i class="fas fa-trash-alt me-2"></i> Delete Order</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── NEW ORDER MODAL ── -->
+
+  </div>
+</div>
+
+<!-- ── NEW ORDER MODAL ── -->
+<div class="modal-overlay" id="newOrderModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Add <span>Manual Order</span></h3>
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="m-row">
+      <div class="m-field"><label class="m-label">Client Name *</label><input class="m-ctrl" id="mName" placeholder="Full name"></div>
+      <div class="m-field"><label class="m-label">Phone / WhatsApp *</label><input class="m-ctrl" id="mPhone" placeholder="+91 …"></div>
+    </div>
+    <div class="m-row">
+      <div class="m-field"><label class="m-label">Email</label><input class="m-ctrl" id="mEmail" type="email" placeholder="optional"></div>
+      <div class="m-field"><label class="m-label">Service *</label>
+        <select class="m-ctrl" id="mService">
+          <option value="">— Select —</option>
+          <option>Basic PPT</option><option>Pro PPT</option>
+          <option>Poster Pack</option><option>Website Design</option><option>Custom / Not Sure</option>
+        </select>
+      </div>
+    </div>
+    <div class="m-row">
+      <div class="m-field"><label class="m-label">Agreed Price (₹)</label><input class="m-ctrl" id="mPrice" placeholder="e.g. 199"></div>
+      <div class="m-field"><label class="m-label">Deadline</label><input class="m-ctrl" type="date" id="mDeadline"></div>
+    </div>
+    <div class="m-field"><label class="m-label">Project Description</label><textarea class="m-ctrl" id="mDetails" rows="3" placeholder="Brief description…"></textarea></div>
+    <div class="m-row">
+      <div class="m-field"><label class="m-label">Payment Status</label>
+        <select class="m-ctrl" id="mPayment"><option value="pending">Pending</option><option value="half">Half Paid</option><option value="full">Full Paid</option></select>
+      </div>
+      <div class="m-field"><label class="m-label">Delivery Status</label>
+        <select class="m-ctrl" id="mStatus"><option value="new">New</option><option value="in-progress">In Progress</option><option value="review">Review</option><option value="delivered">Delivered</option></select>
+      </div>
+    </div>
+    <div class="m-field"><label class="m-label">Referral ID / Notes</label><input class="m-ctrl" id="mNotes" placeholder="optional"></div>
+    <button class="btn-modal-save" id="btnModalSave"><i class="fas fa-plus me-2"></i>Add Order</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-msg" id="toastMsg">changes saved</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+//  TN WEB RATS — ADMIN DASHBOARD
+// ════════════════════════════════════════════════════════
+
+// ── Auth guard ───────────────────────────────────────────
+const session = JSON.parse(sessionStorage.getItem('tnwr_session') || 'null');
+if (!session) { window.location.href = 'login.html'; }
+else {
+  document.getElementById('sbName').textContent = session.name || 'Admin';
+  document.getElementById('sbRole').textContent = session.role || 'admin';
+}
+
+// ── Logout ───────────────────────────────────────────────
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem('tnwr_session');
+  window.location.href = 'login.html';
+});
+
+// ── Clock ────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' ' +
+    n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+tick(); setInterval(tick, 30000);
+
+// ── Sidebar toggle ───────────────────────────────────────
+const sidebar = document.getElementById('sidebar');
+const mainEl  = document.getElementById('main');
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  if (window.innerWidth <= 600) {
+    sidebar.classList.toggle('open');
+  } else {
+    sidebar.classList.toggle('collapsed');
+    mainEl.classList.toggle('expanded');
+  }
+});
+
+// ── Data helpers ──────────────────────────────────────────
+function getOrders()  { return JSON.parse(localStorage.getItem('tnwr_orders') || '[]'); }
+function saveOrders(o){ localStorage.setItem('tnwr_orders', JSON.stringify(o)); }
+
+function genRef() {
+  return 'TNWR-' + Date.now().toString(36).toUpperCase().slice(-6);
+}
+
+// ── State ─────────────────────────────────────────────────
+let activeFilter  = '';
+let activeService = '';
+let searchQ       = '';
+let selectedRef   = null;
+let isRegularEdit = false;
+
+// ── Seed demo data if empty ───────────────────────────────
+function seedDemo() {
+  const orders = getOrders();
+  if (orders.length > 0) return;
+  const demo = [
+    { ref:'TNWR-DEMO01', name:'Priya Sharma',   phone:'+91 98765 43210', email:'priya@example.com', service:'Pro PPT',         price:'₹199', details:'MBA project on sustainable energy, 20 slides, dark theme, animated.', deadline:'2026-03-10', budget:'₹1k–₹5k', urgent:false, source:'Instagram @tn_web_rats', status:'in-progress', paymentStatus:'half', amountPaid:100, assigned:'Lead Designer', referral:'',       discount:0,  isRegular:false, notes:'Client wants charts on slide 8.', createdAt:new Date(Date.now()-86400000*2).toISOString() },
+    { ref:'TNWR-DEMO02', name:'Arjun Krishnan', phone:'+91 87654 32109', email:'arjun@mail.com',     service:'Basic PPT',       price:'₹99',  details:'5-slide intro PPT for college tech fest. Simple clean design.', deadline:'2026-03-05', budget:'Under ₹500', urgent:true, source:'Friend / Classmate', status:'new',         paymentStatus:'pending', amountPaid:0,   assigned:'',              referral:'REF-ARJUN', discount:10, isRegular:false, notes:'',                            createdAt:new Date(Date.now()-86400000).toISOString() },
+    { ref:'TNWR-DEMO03', name:'Meena Devi',     phone:'+91 76543 21098', email:'',                   service:'Poster Pack',     price:'₹159', details:'3 posters for our college cultural event Zephyr 2026. Vibrant theme.', deadline:'2026-02-28', budget:'₹500–₹1k', urgent:true, source:'WhatsApp forward',  status:'review',      paymentStatus:'half', amountPaid:80,  assigned:'Graphic Artist', referral:'',       discount:0,  isRegular:true,  notes:'Regular customer. 2nd order.', createdAt:new Date(Date.now()-86400000*5).toISOString() },
+    { ref:'TNWR-DEMO04', name:'Ravi Kumar',     phone:'+91 65432 10987', email:'ravi@biz.com',        service:'Website Design',  price:'Custom', details:'Portfolio website for mechanical engineering graduate. 5 pages, responsive.', deadline:'2026-03-20', budget:'₹1k–₹5k', urgent:false, source:'Google search',    status:'delivered',   paymentStatus:'full', amountPaid:3500, assigned:'Web Developer', referral:'',      discount:0,  isRegular:false, notes:'Delivered via Google Drive link.', createdAt:new Date(Date.now()-86400000*8).toISOString() },
+  ];
+  saveOrders(demo);
+}
+seedDemo();
+
+// ── Render stats ──────────────────────────────────────────
+function renderStats() {
+  const orders = getOrders();
+  document.getElementById('s-total').textContent  = orders.length;
+  document.getElementById('s-active').textContent = orders.filter(o => o.status === 'in-progress').length;
+  document.getElementById('s-done').textContent   = orders.filter(o => o.status === 'delivered').length;
+  const rev = orders.reduce((s,o) => s + (Number(o.amountPaid) || 0), 0);
+  document.getElementById('s-revenue').textContent = '₹' + rev.toLocaleString('en-IN');
+  document.getElementById('sbCount').textContent   = orders.filter(o => o.status === 'new').length;
+}
+
+// ── Badge helper ──────────────────────────────────────────
+function statusBadge(s) {
+  const map = {
+    'new':         '<span class="badge badge-new"><i class="fas fa-circle-dot"></i> New</span>',
+    'in-progress': '<span class="badge badge-progress"><i class="fas fa-gear"></i> In Progress</span>',
+    'review':      '<span class="badge badge-review"><i class="fas fa-eye"></i> Review</span>',
+    'delivered':   '<span class="badge badge-delivered"><i class="fas fa-check"></i> Delivered</span>',
+    'cancelled':   '<span class="badge badge-cancelled"><i class="fas fa-xmark"></i> Cancelled</span>',
+  };
+  return map[s] || s;
+}
+function payBadge(s) {
+  const map = {
+    'pending': '<span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>',
+    'half':    '<span class="badge badge-half"><i class="fas fa-circle-half-stroke"></i> Half</span>',
+    'full':    '<span class="badge badge-full"><i class="fas fa-check"></i> Full</span>',
+  };
+  return map[s] || s;
+}
+
+// ── Render orders list ────────────────────────────────────
+function renderOrders() {
+  const orders = getOrders();
+  const seenOrders = JSON.parse(localStorage.getItem('tnwr_seen_orders') || '[]');
+  const filtered = orders.filter(o => {
+    const matchStatus  = !activeFilter  || o.status === activeFilter;
+    const matchService = !activeService || o.service === activeService;
+    const q = searchQ.toLowerCase();
+    const matchSearch  = !q || o.name.toLowerCase().includes(q)
+                            || o.ref.toLowerCase().includes(q)
+                            || o.service.toLowerCase().includes(q)
+                            || (o.phone||'').includes(q);
+    return matchStatus && matchService && matchSearch;
+  });
+
+  const list = document.getElementById('ordersList');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i>// no orders found</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(o => {
+    const isSeen = seenOrders.includes(o.ref);
+    const seenIcon = isSeen ? '<i class="fas fa-check-circle" style="color: #25D366; margin-left: 8px; font-size: 0.9rem;" title="Seen"></i>' : '';
+    
+    return `
+    <div class="order-row ${selectedRef === o.ref ? 'selected' : ''}" data-ref="${o.ref}">
+      <div class="col-ref">${o.ref}${seenIcon}</div>
+      <div class="col-client">
+        <div class="cname">${o.name}${o.isRegular ? ' <span style="color:var(--warn);font-size:.7rem;" title="Regular customer">★</span>' : ''}</div>
+        <div class="csub">${o.phone}</div>
+      </div>
+      <div class="col-service">${o.service}</div>
+      <div class="col-price">${o.price || '—'}</div>
+      <div class="col-pay">${payBadge(o.paymentStatus)}</div>
+      <div class="col-del">${statusBadge(o.status)}</div>
+      <div class="col-action"><button class="btn-view">View</button></div>
+    </div>
+  `}).join('');
+
+  list.querySelectorAll('.order-row').forEach(row => {
+    row.addEventListener('click', () => openDetail(row.dataset.ref));
+  });
+
+  renderStats();
+}
+
+// ── Detail panel ──────────────────────────────────────────
+function openDetail(ref) {
+  const orders = getOrders();
+  const o = orders.find(x => x.ref === ref);
+  if (!o) return;
+  selectedRef = ref;
+
+  // Populate read-only
+  document.getElementById('dpRef').textContent         = o.ref;
+  document.getElementById('dpName').textContent        = o.name;
+  document.getElementById('dpService').textContent     = o.service;
+  document.getElementById('dpPrice').textContent       = o.price || '—';
+  document.getElementById('dpDeadline').textContent    = o.deadline || 'Flexible';
+  document.getElementById('dpBudget').textContent      = o.budget || '—';
+  document.getElementById('dpDetails').textContent     = o.details || '—';
+  document.getElementById('dpUrgent').textContent      = o.urgent ? '⚡ Yes (+50%)' : 'No';
+  document.getElementById('dpDate').textContent        = new Date(o.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('dpClientName').textContent  = o.name;
+  document.getElementById('dpPhone').textContent       = o.phone;
+  document.getElementById('dpEmail').textContent       = o.email || '—';
+  document.getElementById('dpSource').textContent      = o.source || '—';
+
+  // Populate editable
+  document.getElementById('editStatus').value    = o.status || 'new';
+  document.getElementById('editPayment').value   = o.paymentStatus || 'pending';
+  document.getElementById('editAmountPaid').value= o.amountPaid || '';
+  document.getElementById('editAssigned').value  = o.assigned || '';
+  document.getElementById('editReferral').value  = o.referral || '';
+  document.getElementById('editDiscount').value  = o.discount || '';
+  document.getElementById('editNotes').value     = o.notes || '';
+
+  isRegularEdit = !!o.isRegular;
+  document.getElementById('editRegularCheck').classList.toggle('checked', isRegularEdit);
+
+  // Show panel
+  document.getElementById('detailOverlay').classList.add('show');
+  document.getElementById('detailPanel').classList.add('show');
+  renderOrders();
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('show');
+  document.getElementById('detailPanel').classList.remove('show');
+  selectedRef = null;
+  renderOrders();
+}
+
+document.getElementById('dpClose').addEventListener('click', closeDetail);
+document.getElementById('detailOverlay').addEventListener('click', closeDetail);
+
+// Regular customer toggle in panel
+document.getElementById('editRegularCheck').addEventListener('click', function() {
+  isRegularEdit = !isRegularEdit;
+  this.classList.toggle('checked', isRegularEdit);
+});
+
+// Save order changes
+document.getElementById('btnSaveOrder').addEventListener('click', () => {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.ref === selectedRef);
+  if (idx === -1) return;
+  
+  orders[idx].updatedAt = new Date().toISOString();
+  saveOrders(orders);
+  
+  // Mark as seen
+  const seenOrders = JSON.parse(localStorage.getItem('tnwr_seen_orders') || '[]');
+  if (!seenOrders.includes(selectedRef)) {
+    seenOrders.push(selectedRef);
+    localStorage.setItem('tnwr_seen_orders', JSON.stringify(seenOrders));
+  }
+  
+  closeDetail();
+  renderOrders();
+  toast('// order marked as seen ✓');
+});
+document.getElementById('btnSaveOrder').addEventListener('click', () => {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.ref === selectedRef);
+  if (idx === -1) return;
+
+  orders[idx].status        = document.getElementById('editStatus').value;
+  orders[idx].paymentStatus = document.getElementById('editPayment').value;
+  orders[idx].amountPaid    = Number(document.getElementById('editAmountPaid').value) || 0;
+  orders[idx].assigned      = document.getElementById('editAssigned').value.trim();
+  orders[idx].referral      = document.getElementById('editReferral').value.trim();
+  orders[idx].discount      = Number(document.getElementById('editDiscount').value) || 0;
+  orders[idx].notes         = document.getElementById('editNotes').value.trim();
+  orders[idx].isRegular     = isRegularEdit;
+  orders[idx].updatedAt     = new Date().toISOString();
+
+  saveOrders(orders);
+  renderOrders();
+  toast('// order updated ✓');
+});
+
+// Delete order
+document.getElementById('btnDeleteOrder').addEventListener('click', () => {
+  if (!confirm('Delete this order? This cannot be undone.')) return;
+  const orders = getOrders().filter(o => o.ref !== selectedRef);
+  saveOrders(orders);
+  closeDetail();
+  toast('// order deleted');
+});
+
+// ── Filters ───────────────────────────────────────────────
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    activeFilter = pill.dataset.status;
+    renderOrders();
+  });
+});
+
+document.getElementById('filterService').addEventListener('change', function() {
+  activeService = this.value;
+  renderOrders();
+});
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchQ = this.value.trim();
+  renderOrders();
+});
+
+// ── New order modal ───────────────────────────────────────
+document.getElementById('btnNewOrder').addEventListener('click', () => {
+  document.getElementById('newOrderModal').classList.add('show');
+});
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('newOrderModal').classList.remove('show');
+});
+document.getElementById('newOrderModal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+
+document.getElementById('btnModalSave').addEventListener('click', () => {
+  const name    = document.getElementById('mName').value.trim();
+  const phone   = document.getElementById('mPhone').value.trim();
+  const service = document.getElementById('mService').value;
+  if (!name || !phone || !service) { alert('Name, phone and service are required.'); return; }
+
+  const newOrder = {
+    ref:           genRef(),
+    name,
+    phone,
+    email:         document.getElementById('mEmail').value.trim(),
+    service,
+    price:         document.getElementById('mPrice').value ? '₹' + document.getElementById('mPrice').value : 'Custom',
+    details:       document.getElementById('mDetails').value.trim(),
+    deadline:      document.getElementById('mDeadline').value,
+    budget:        '',
+    urgent:        false,
+    source:        'Manual Entry',
+    status:        document.getElementById('mStatus').value,
+    paymentStatus: document.getElementById('mPayment').value,
+    amountPaid:    0,
+    assigned:      '',
+    referral:      document.getElementById('mNotes').value.trim(),
+    discount:      0,
+    isRegular:     false,
+    notes:         '',
+    createdAt:     new Date().toISOString(),
+    updatedAt:     new Date().toISOString(),
+  };
+
+  const orders = getOrders();
+  orders.unshift(newOrder);
+  saveOrders(orders);
+
+  // Clear form
+  ['mName','mPhone','mEmail','mPrice','mDetails','mDeadline','mNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('mService').value  = '';
+  document.getElementById('mPayment').value  = 'pending';
+  document.getElementById('mStatus').value   = 'new';
+
+  document.getElementById('newOrderModal').classList.remove('show');
+  renderOrders();
+  toast('// order added ✓');
+});
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toastMsg');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Sidebar nav ───────────────────────────────────────────
+// ── View switching ───────────────────────────────────────────
+function switchView(name) {
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('view-' + name);
+  if (panel) panel.classList.add('active');
+
+  document.querySelectorAll('.sb-item[data-view]').forEach(s => s.classList.remove('active'));
+  const sItem = document.querySelector(`.sb-item[data-view="${name}"]`);
+  if (sItem) sItem.classList.add('active');
+
+  if (name === 'invitekeys') renderKeys();
+  if (name === 'admins')     renderTeam();
+  if (name === 'stats')     renderAnalytics();
+}
+
+document.querySelectorAll('.sb-item[data-view]').forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    switchView(item.dataset.view);
+  });
+});
+
+// ════════════════════════════════════════════════
+//  INVITE KEY SYSTEM
+// ════════════════════════════════════════════════
+
+function getKeys()   { return JSON.parse(localStorage.getItem('tnwr_invite_keys') || '[]'); }
+function saveKeys(k) { localStorage.setItem('tnwr_invite_keys', JSON.stringify(k)); }
+
+// Seed default demo keys so they show up in the panel
+function seedDefaultKeys() {
+  const keys = getKeys();
+  const defaults = ['TNWR-DEMO-DEMO-2026', 'TNWR-RATS-RATS-2026', 'TNWR-ADMN-ADMN-2026'];
+  let changed = false;
+  defaults.forEach(k => {
+    if (!keys.find(x => x.key === k)) {
+      keys.push({
+        key:       k,
+        status:    'active',
+        role:      'Any',
+        createdBy: 'System',
+        createdAt: new Date().toISOString(),
+        usedBy:    null,
+        usedAt:    null,
+      });
+      changed = true;
+    }
+  });
+  if (changed) saveKeys(keys);
+}
+seedDefaultKeys();
+
+function genKey() {
+  // Format: TNWR-XXXX-XXXX-XXXX (random alphanum segments)
+  const seg = () => Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4).padEnd(4,'X');
+  return `TNWR-${seg()}-${seg()}-${seg()}`;
+}
+
+function renderKeys() {
+  const keys  = getKeys();
+  const grid  = document.getElementById('keysGrid');
+  if (!keys.length) {
+    grid.innerHTML = `<div class="keys-empty"><i class="fas fa-key"></i>// no invite keys yet<br>click "Generate New Key" above to create one</div>`;
+    return;
+  }
+  const badgeCls = { active:'kb-active', used:'kb-used', revoked:'kb-revoked' };
+  const badgeIcon= { active:'fas fa-circle-dot', used:'fas fa-check', revoked:'fas fa-ban' };
+  const badgeTxt = { active:'Active', used:'Used', revoked:'Revoked' };
+  grid.innerHTML = keys.slice().reverse().map(k => {
+    const actionsHtml = k.status === 'active' ? `
+      <div class="key-actions">
+        <button class="btn-copy-key" onclick="copyKey('${k.key}')">
+          <i class="fas fa-copy"></i> Copy Key
+        </button>
+        <button class="btn-revoke-key" onclick="revokeKey('${k.key}')">
+          <i class="fas fa-ban"></i> Revoke
+        </button>
+      </div>` : '';
+    
+    return `
+    <div class="key-card ${k.status}">
+      <div class="key-top">
+        <div class="key-val">${k.key}</div>
+        <span class="key-badge ${badgeCls[k.status]}">
+          <i class="${badgeIcon[k.status]}"></i>${badgeTxt[k.status]}
+        </span>
+      </div>
+      <div class="key-meta">
+        <b>Created by:</b> ${k.createdBy}<br>
+        <b>Created:</b> ${new Date(k.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}<br>
+        ${k.usedBy ? `<b>Used by:</b> ${k.usedBy}<br>` : ''}
+        ${k.usedAt ? `<b>Used on:</b> ${new Date(k.usedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}` : ''}
+        ${k.status === 'active' ? `<b>Share with:</b> intended ${k.role} only` : ''}
+      </div>
+      <span class="key-role-tag">
+        <i class="fas fa-${k.role==='superadmin'?'crown':k.role==='manager'?'user-tie':k.role==='designer'?'paint-brush':'headset'}"></i>
+        ${k.role==='superadmin'?'Super Admin':k.role.charAt(0).toUpperCase()+k.role.slice(1)} only
+      </span>
+      <div style="display:none">
+      </div>
+      ${actionsHtml}
+    </div>
+  `;
+  }).join('');
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(() => {
+    toast('// key copied to clipboard ✓');
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = key; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('// key copied ✓');
+  });
+}
+
+function revokeKey(key) {
+  if (!confirm(`Revoke key "${key}"? It will no longer work for signup.`)) return;
+  const keys = getKeys();
+  const k = keys.find(x => x.key === key);
+  if (k) { k.status = 'revoked'; saveKeys(keys); }
+  renderKeys();
+  toast('// key revoked');
+}
+
+document.getElementById('btnGenKey').addEventListener('click', () => {
+  const admin      = JSON.parse(sessionStorage.getItem('tnwr_session') || '{}');
+  const roleSelect = document.getElementById('genRoleSelect');
+  const chosenRole = roleSelect ? roleSelect.value : 'manager';
+  const newKey = {
+    key:       genKey(),
+    status:    'active',
+    role:      chosenRole,
+    createdBy: admin.name || 'Admin',
+    createdAt: new Date().toISOString(),
+    usedBy:    null,
+    usedAt:    null,
+  };
+  const keys = getKeys();
+  keys.push(newKey);
+  saveKeys(keys);
+  renderKeys();
+  copyKey(newKey.key);
+  const roleLabel = chosenRole === 'superadmin' ? 'Super Admin' : chosenRole.charAt(0).toUpperCase() + chosenRole.slice(1);
+  toast(`// ${roleLabel} key generated & copied ✓`);
+});
+
+// ── Team panel ────────────────────────────────────────────
+function renderTeam() {
+  const admins = JSON.parse(localStorage.getItem('tnwr_admins') || '[]');
+  const grid   = document.getElementById('teamGrid');
+  if (!admins.length) {
+    grid.innerHTML = `<div class="keys-empty"><i class="fas fa-users"></i>// no team members yet<br>generate an invite key and share it to add members</div>`;
+    return;
+  }
+  const roleMeta = {
+    superadmin: { icon:'crown',       bg:'rgba(255,169,77,.12)',  border:'rgba(255,169,77,.28)',  color:'#ffa94d' },
+    manager:    { icon:'user-tie',    bg:'rgba(102,252,241,.08)', border:'rgba(102,252,241,.22)', color:'var(--cyan)' },
+    designer:   { icon:'paint-brush', bg:'rgba(102,155,252,.1)',  border:'rgba(102,155,252,.28)', color:'#66b3fc' },
+    support:    { icon:'headset',     bg:'rgba(105,219,124,.1)',  border:'rgba(105,219,124,.28)', color:'#69db7c' },
+  };
+  const cur = JSON.parse(sessionStorage.getItem('tnwr_session') || '{}');
+  grid.innerHTML = admins.map(a => {
+    const m = roleMeta[a.role] || roleMeta.manager;
+    const isMe = a.email === cur.email;
+    return `
+    <div class="team-card">
+      <div class="team-avatar" style="background:${m.bg};border-color:${m.border};color:${m.color};">
+        <i class="fas fa-${m.icon}"></i>
+      </div>
+      <div class="team-name">${a.name}${isMe ? ' <span style="font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.4);letter-spacing:.08em;">(you)</span>' : ''}</div>
+      <div class="team-email">${a.email}</div>
+      <span class="team-role" style="color:${m.color};border-color:${m.border};background:${m.bg};">
+        <i class="fas fa-${m.icon}"></i> ${a.role}
+      </span>
+      <div class="team-joined">// joined ${new Date(a.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Analytics Functions ──────────────────────────────────
+function renderAnalytics() {
+  const orders = getOrders();
+  const period = document.getElementById('analyticsPeriod').value;
+  
+  // Calculate analytics based on period
+  const now = new Date();
+  const cutoffDate = new Date(now.getTime() - (parseInt(period) * 24 * 60 * 60 * 1000));
+  
+  const filteredOrders = orders.filter(o => new Date(o.createdAt) >= cutoffDate);
+  
+  // Update stats
+  document.getElementById('totalViews').textContent = '2,847';
+  document.getElementById('uniqueVisitors').textContent = '1,023';
+  document.getElementById('conversionRate').textContent = '3.2%';
+  document.getElementById('completedOrders').textContent = filteredOrders.length;
+  
+  // Update activity table
+  const activityTable = document.getElementById('activityTable');
+  const recentActivities = [
+    { timestamp: new Date().toISOString(), action: 'Dashboard loaded', user: 'System', details: 'Analytics panel initialized' }
+  ];
+  
+  // Add recent orders to activity
+  filteredOrders.slice(-5).forEach(o => {
+    recentActivities.push({
+      timestamp: o.createdAt,
+      action: 'New Order',
+      user: o.name,
+      details: `${o.service} - ${o.price}`
+    });
+  });
+  
+  activityTable.innerHTML = recentActivities.map(activity => `
+    <tr>
+      <td>${new Date(activity.timestamp).toLocaleString()}</td>
+      <td>${activity.action}</td>
+      <td>${activity.user}</td>
+      <td>${activity.details}</td>
+    </tr>
+  `).join('');
+}
+
+function exportAnalyticsData() {
+  const orders = getOrders();
+  const dataStr = JSON.stringify(orders, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tnwr-analytics-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+document.getElementById('btnDeleteOrder').addEventListener('click', () => {
+  if (!confirm(`Delete order "${selectedRef}"? This action cannot be undone.`)) return;
+  
+  const orders = getOrders().filter(o => o.ref !== selectedRef);
+  saveOrders(orders);
+  
+  // Remove from seen list
+  const seenOrders = JSON.parse(localStorage.getItem('tnwr_seen_orders') || '[]');
+  const updatedSeen = seenOrders.filter(ref => ref !== selectedRef);
+  localStorage.setItem('tnwr_seen_orders', JSON.stringify(updatedSeen));
+  
+  closeDetail();
+  renderOrders();
+  toast('// order deleted ✓');
+});
+document.getElementById('analyticsPeriod').addEventListener('change', renderAnalytics);
+
+document.getElementById('btnMarkSeen').addEventListener('click', () => {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.ref === selectedRef);
+  if (idx === -1) return;
+  
+  // Mark as seen
+  const seenOrders = JSON.parse(localStorage.getItem('tnwr_seen_orders') || '[]');
+  if (!seenOrders.includes(selectedRef)) {
+    seenOrders.push(selectedRef);
+    localStorage.setItem('tnwr_seen_orders', JSON.stringify(seenOrders));
+  }
+  
+  closeDetail();
+  renderOrders();
+  toast('// order marked as seen ✓');
+});
+
+// ── Listen for new orders from book.html (localStorage event) ────
+window.addEventListener('storage', e => {
+  if (e.key === 'tnwr_orders') {
+    renderOrders();
+    toast('// new order received!');
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────
+renderOrders();
+renderKeys();
+renderTeam();
+renderAnalytics();
+</script>
+</body>
+</html>

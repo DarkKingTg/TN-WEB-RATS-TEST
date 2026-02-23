@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Service - TN WEB RATS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="Statics/styles.css" rel="stylesheet">
+    <!-- EmailJS — sends booking to Gmail silently on submit -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+      // Replace with your real EmailJS public key after setup at emailjs.com
+      (function(){ if(typeof emailjs!=='undefined') emailjs.init('YOUR_EMAILJS_PUBLIC_KEY'); })();
+    </script>
+    <style>
+    :root {
+        --bg:#0B0C10; --dark:#1F2833; --gray:#C5C6C7;
+        --cyan:#66FCF1; --teal:#45A29E;
+        --mono:'Share Tech Mono',monospace; --sans:'Rajdhani',sans-serif;
+    }
+    .neural-background-iframe {
+        position:fixed; inset:0; width:100%; height:100%;
+        border:none; z-index:0; pointer-events:none;
+        transform: scale(1.3);
+    }
+    body { background:var(--bg); font-family:var(--sans); color:var(--gray); overflow-x:hidden; }
+    .navbar { z-index:100!important; }
+    .main-content-wrapper { position:relative; z-index:2; overflow-y:auto; height:100vh; }
+
+    /* HERO */
+    .booking-hero { padding:140px 0 56px; text-align:center; background:linear-gradient(to bottom,rgba(11,12,16,.65),rgba(11,12,16,.2)); }
+    .booking-hero .tag {
+        display:inline-block; font-family:var(--mono); font-size:.68rem; letter-spacing:.28em;
+        text-transform:uppercase; color:var(--cyan); border:1px solid rgba(102,252,241,.25);
+        border-radius:20px; padding:6px 18px; margin-bottom:22px;
+    }
+    .booking-hero h1 { font-size:clamp(2rem,5vw,3.4rem); font-weight:700; color:var(--gray); letter-spacing:.06em; }
+    .booking-hero h1 span { color:var(--cyan); }
+    .booking-hero p { margin-top:12px; color:rgba(197,198,199,.5); font-family:var(--mono); font-size:.88rem; letter-spacing:.08em; }
+
+    /* PROGRESS */
+    .wizard-progress { display:flex; justify-content:center; align-items:flex-start; gap:0; margin:0 auto 44px; max-width:540px; }
+    .wizard-step { display:flex; flex-direction:column; align-items:center; gap:7px; flex:1; position:relative; }
+    .wizard-step::after { content:''; position:absolute; top:17px; left:50%; width:100%; height:2px; background:rgba(102,252,241,.13); z-index:0; transition:background .4s; }
+    .wizard-step:last-child::after { display:none; }
+    .wizard-step.done::after { background:rgba(69,162,158,.5); }
+    .step-dot {
+        width:34px; height:34px; border-radius:50%; border:2px solid rgba(102,252,241,.2);
+        background:var(--dark); display:flex; align-items:center; justify-content:center;
+        font-family:var(--mono); font-size:.72rem; color:rgba(197,198,199,.35);
+        position:relative; z-index:1; transition:all .35s;
+    }
+    .wizard-step.active .step-dot { border-color:var(--cyan); background:rgba(102,252,241,.1); color:var(--cyan); box-shadow:0 0 16px rgba(102,252,241,.28); }
+    .wizard-step.done  .step-dot  { border-color:var(--teal); background:rgba(69,162,158,.18); color:var(--teal); }
+    .step-label { font-family:var(--mono); font-size:.57rem; letter-spacing:.15em; text-transform:uppercase; color:rgba(197,198,199,.3); transition:color .3s; }
+    .wizard-step.active .step-label { color:var(--cyan); }
+    .wizard-step.done  .step-label  { color:var(--teal); }
+
+    /* WIZARD WRAP */
+    .wizard-wrap { max-width:880px; margin:0 auto; padding:0 20px; }
+    .step-panel { display:none; }
+    .step-panel.active { display:block; animation:fadeUp .4s ease both; }
+    .step-title { font-family:var(--mono); font-size:.68rem; letter-spacing:.25em; text-transform:uppercase; color:var(--cyan); margin-bottom:26px; display:flex; align-items:center; gap:10px; }
+    .step-title i { font-size:1rem; }
+    .step-title::after { content:''; flex:1; height:1px; background:rgba(102,252,241,.12); }
+
+    /* SERVICE CARDS */
+    .service-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:14px; margin-bottom:24px; }
+    .svc-card {
+        position:relative; background:rgba(31,40,51,.88); border:2px solid rgba(102,252,241,.1);
+        border-radius:16px; padding:26px 18px 20px; cursor:pointer; text-align:center;
+        transition:all .3s; overflow:hidden;
+    }
+    .svc-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(102,252,241,.06),transparent 60%); opacity:0; transition:opacity .3s; }
+    .svc-card:hover  { border-color:rgba(102,252,241,.38); transform:translateY(-4px); }
+    .svc-card:hover::before { opacity:1; }
+    .svc-card.selected { border-color:var(--cyan); background:rgba(102,252,241,.07); box-shadow:0 0 26px rgba(102,252,241,.14); }
+    .svc-card.selected::before { opacity:1; }
+    .svc-check {
+        position:absolute; top:11px; left:11px; width:22px; height:22px; border-radius:50%;
+        background:var(--cyan); color:var(--bg); display:flex; align-items:center; justify-content:center;
+        font-size:.62rem; opacity:0; transform:scale(.5); transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .svc-card.selected .svc-check { opacity:1; transform:scale(1); }
+    .svc-badge { position:absolute; top:11px; right:11px; background:rgba(102,252,241,.12); border:1px solid rgba(102,252,241,.3); color:var(--cyan); font-family:var(--mono); font-size:.56rem; letter-spacing:.1em; padding:2px 7px; border-radius:8px; opacity:0; transition:opacity .3s; }
+    .svc-card.selected .svc-badge { opacity:1; }
+    .svc-icon { width:52px; height:52px; border-radius:13px; background:linear-gradient(135deg,rgba(102,252,241,.15),rgba(69,162,158,.1)); display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:var(--cyan); margin:0 auto 13px; transition:box-shadow .3s; }
+    .svc-card.selected .svc-icon { box-shadow:0 0 18px rgba(102,252,241,.25); }
+    .svc-name { font-size:.97rem; font-weight:700; color:var(--gray); letter-spacing:.05em; margin-bottom:3px; }
+    .svc-tagline { font-size:.72rem; color:rgba(197,198,199,.4); font-family:var(--mono); margin-bottom:12px; }
+    .svc-price { font-size:1.45rem; font-weight:700; color:var(--cyan); font-family:var(--mono); line-height:1; }
+    .svc-price sub { font-size:.68rem; color:rgba(102,252,241,.55); font-weight:400; vertical-align:super; }
+    .svc-price span { display:block; font-size:.6rem; color:rgba(197,198,199,.35); letter-spacing:.09em; margin-top:3px; }
+    .svc-features { list-style:none; padding:0; margin:12px 0 0; text-align:left; border-top:1px solid rgba(102,252,241,.08); padding-top:11px; }
+    .svc-features li { font-size:.74rem; color:rgba(197,198,199,.5); padding:2px 0; display:flex; align-items:center; gap:7px; }
+    .svc-features li i { color:var(--teal); font-size:.58rem; flex-shrink:0; }
+    .svc-card.selected .svc-features li { color:rgba(197,198,199,.78); }
+
+    /* FORM SECTION */
+    .form-section { background:rgba(31,40,51,.84); backdrop-filter:blur(12px); border:1px solid rgba(102,252,241,.1); border-radius:16px; padding:34px 38px; margin-bottom:22px; }
+    @media(max-width:576px){ .form-section{padding:22px 18px;} }
+    .field-group { margin-bottom:20px; }
+    .field-label { display:block; font-family:var(--mono); font-size:.63rem; letter-spacing:.2em; text-transform:uppercase; color:rgba(197,198,199,.42); margin-bottom:7px; transition:color .3s; }
+    .field-group:focus-within .field-label { color:var(--cyan); }
+    .field-wrap { position:relative; }
+    .field-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:rgba(102,252,241,.28); font-size:.85rem; pointer-events:none; transition:color .3s; }
+    .field-wrap.ta-wrap .field-icon { top:15px; transform:none; }
+    .field-group:focus-within .field-icon { color:var(--cyan); }
+    .f-ctrl { width:100%; padding:13px 14px 13px 40px; background:rgba(11,12,16,.72); border:1px solid rgba(102,252,241,.12); border-radius:10px; color:var(--gray); font-family:var(--sans); font-size:.94rem; font-weight:500; transition:border-color .3s,box-shadow .3s; outline:none; -webkit-appearance:none; }
+    .f-ctrl::placeholder { color:rgba(197,198,199,.18); }
+    .f-ctrl:focus { border-color:var(--cyan); box-shadow:0 0 0 3px rgba(102,252,241,.08); background:rgba(11,12,16,.9); }
+    .f-ctrl.is-invalid { border-color:#ff4d6d; }
+    textarea.f-ctrl { resize:vertical; min-height:108px; padding-top:13px; }
+    select.f-ctrl { cursor:pointer; }
+    select.f-ctrl option { background:var(--dark); }
+    .field-err { display:none; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; color:#ff4d6d; margin-top:5px; }
+    .field-err.show { display:block; }
+    .date-hint { margin-top:4px; font-family:var(--mono); font-size:.6rem; color:rgba(197,198,199,.28); letter-spacing:.07em; }
+
+    /* BUDGET PILLS */
+    .budget-pills { display:flex; flex-wrap:wrap; gap:9px; }
+    .budget-pill { padding:8px 16px; background:rgba(11,12,16,.72); border:1px solid rgba(102,252,241,.12); border-radius:22px; color:rgba(197,198,199,.5); font-family:var(--mono); font-size:.7rem; letter-spacing:.07em; cursor:pointer; transition:all .25s; user-select:none; }
+    .budget-pill:hover  { border-color:rgba(102,252,241,.35); color:var(--gray); }
+    .budget-pill.active { border-color:var(--cyan); background:rgba(102,252,241,.08); color:var(--cyan); }
+
+    /* URGENCY TOGGLE */
+    .urgency-row { display:flex; align-items:center; gap:14px; padding:14px 18px; background:rgba(255,165,0,.05); border:1px solid rgba(255,165,0,.15); border-radius:10px; cursor:pointer; transition:border-color .3s; }
+    .urgency-row:hover { border-color:rgba(255,165,0,.32); }
+    .urgency-row.active { border-color:rgba(255,165,0,.6); background:rgba(255,165,0,.08); }
+    .urgency-toggle { width:44px; height:24px; background:rgba(255,255,255,.08); border-radius:12px; position:relative; flex-shrink:0; transition:background .3s; }
+    .urgency-row.active .urgency-toggle { background:rgba(255,165,0,.45); }
+    .urgency-toggle::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:rgba(197,198,199,.55); transition:left .3s,background .3s; }
+    .urgency-row.active .urgency-toggle::after { left:23px; background:#ffa94d; }
+    .urgency-text strong { font-size:.88rem; font-weight:600; color:var(--gray); }
+    .urgency-text small { display:block; font-family:var(--mono); font-size:.6rem; color:rgba(197,198,199,.38); margin-top:2px; }
+    .urgency-row.active .urgency-text strong { color:#ffa94d; }
+
+    /* REVIEW */
+    .review-card { background:rgba(31,40,51,.86); border:1px solid rgba(102,252,241,.11); border-radius:16px; overflow:hidden; margin-bottom:18px; }
+    .review-header { padding:16px 26px; background:rgba(102,252,241,.04); border-bottom:1px solid rgba(102,252,241,.09); display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:.66rem; letter-spacing:.2em; text-transform:uppercase; color:var(--cyan); }
+    .review-body   { padding:22px 26px; }
+    .review-row { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid rgba(102,252,241,.055); gap:18px; }
+    .review-row:last-child { border-bottom:none; padding-bottom:0; }
+    .review-key { font-family:var(--mono); font-size:.63rem; letter-spacing:.14em; text-transform:uppercase; color:rgba(197,198,199,.38); flex-shrink:0; min-width:96px; }
+    .review-val { font-size:.88rem; font-weight:600; color:var(--gray); text-align:right; }
+    .review-val.hl { color:var(--cyan); }
+    .review-svc-pill { display:inline-flex; align-items:center; gap:8px; background:rgba(102,252,241,.07); border:1px solid rgba(102,252,241,.22); border-radius:9px; padding:7px 13px; font-family:var(--mono); font-size:.73rem; color:var(--cyan); margin-bottom:14px; }
+
+    /* CONSENT */
+    .consent-row { display:flex; align-items:flex-start; gap:12px; padding:15px 18px; background:rgba(11,12,16,.5); border:1px solid rgba(102,252,241,.1); border-radius:10px; margin-bottom:22px; cursor:pointer; }
+    .consent-box { width:20px; height:20px; border:2px solid rgba(102,252,241,.28); border-radius:5px; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; transition:all .25s; }
+    .consent-row.checked .consent-box { background:var(--cyan); border-color:var(--cyan); }
+    .consent-box i { color:var(--bg); font-size:.63rem; display:none; }
+    .consent-row.checked .consent-box i { display:block; }
+    .consent-text { font-size:.82rem; color:rgba(197,198,199,.52); line-height:1.55; }
+
+    /* BUTTONS */
+    .wizard-nav { display:flex; justify-content:space-between; align-items:center; gap:14px; padding-top:6px; }
+    .btn-prev { display:flex; align-items:center; gap:8px; padding:12px 22px; background:transparent; border:1px solid rgba(102,252,241,.18); border-radius:10px; color:rgba(197,198,199,.5); font-family:var(--sans); font-size:.88rem; font-weight:600; letter-spacing:.04em; cursor:pointer; transition:all .25s; }
+    .btn-prev:hover { border-color:rgba(102,252,241,.42); color:var(--gray); }
+    .btn-next { display:flex; align-items:center; gap:9px; padding:14px 30px; background:linear-gradient(90deg,var(--teal),var(--cyan)); border:none; border-radius:10px; color:var(--bg); font-family:var(--sans); font-size:.97rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; position:relative; overflow:hidden; transition:transform .2s,box-shadow .3s; }
+    .btn-next::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent); transform:translateX(-100%); transition:transform .5s; }
+    .btn-next:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(102,252,241,.32); }
+    .btn-next:hover::before { transform:translateX(100%); }
+    .btn-next:disabled { opacity:.4; pointer-events:none; }
+    .btn-next.loading .btn-text { display:none; }
+    .btn-next .btn-loader { display:none; }
+    .btn-next.loading .btn-loader { display:inline-flex; align-items:center; gap:8px; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .spin { animation:spin .7s linear infinite; }
+    .btn-wa { display:flex; align-items:center; gap:10px; padding:13px 26px; background:rgba(37,211,102,.1); border:1px solid rgba(37,211,102,.32); border-radius:10px; color:#25D366; font-family:var(--sans); font-size:.88rem; font-weight:600; cursor:pointer; text-decoration:none; transition:all .25s; }
+    .btn-wa:hover { background:rgba(37,211,102,.18); border-color:rgba(37,211,102,.58); color:#25D366; }
+
+    /* SUCCESS */
+    .success-overlay { display:none; text-align:center; padding:60px 20px; }
+    .success-overlay.show { display:block; animation:fadeUp .6s ease both; }
+    .success-ring { width:88px; height:88px; border-radius:50%; border:2px solid var(--cyan); display:flex; align-items:center; justify-content:center; margin:0 auto 26px; font-size:2rem; color:var(--cyan); animation:pglow 2s infinite; }
+    .success-overlay h2 { color:var(--cyan); font-size:1.9rem; letter-spacing:.1em; margin-bottom:12px; }
+    .success-overlay p  { color:rgba(197,198,199,.52); font-family:var(--mono); font-size:.83rem; line-height:1.85; }
+    .success-ref { display:inline-block; margin-top:18px; padding:9px 22px; background:rgba(102,252,241,.07); border:1px solid rgba(102,252,241,.2); border-radius:8px; font-family:var(--mono); font-size:.78rem; color:var(--cyan); letter-spacing:.14em; }
+    .footer { background:rgba(11,12,16,.95); border-top:1px solid rgba(102,252,241,.07); }
+
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:translateY(0);} }
+    @keyframes fadeDown{ from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:translateY(0);} }
+    @keyframes pglow { 0%,100%{box-shadow:0 0 18px rgba(102,252,241,.22);}50%{box-shadow:0 0 38px rgba(102,252,241,.52);} }
+
+    @media(max-width:600px){
+        .service-grid{ grid-template-columns:1fr 1fr; }
+        .wizard-nav{ flex-direction:column-reverse; }
+        .btn-next,.btn-prev,.btn-wa{ width:100%; justify-content:center; }
+        .review-row{ flex-direction:column; gap:2px; }
+        .review-val{ text-align:left; }
+    }
+    </style>
+</head>
+<body>
+
+<iframe src="neural-bg.html" class="neural-background-iframe"></iframe>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <img src="RATTY.png" alt="TN WEB RATS Logo" class="navbar-logo me-2" onerror="this.style.display='none'">
+            <span class="brand-text">TN WEB RATS</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+                <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+                <li class="nav-item"><a class="nav-link active" href="book.html">Book Service</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+                <li class="nav-item"><a class="nav-link" href="signup.html">Sign Up</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content-wrapper" style="position:relative; z-index:2;">
+
+<!-- Hero -->
+<section class="booking-hero">
+    <div class="container">
+        <div class="tag" style="animation:fadeDown .6s ease both;"><i class="fas fa-bolt me-2"></i>Fast · Affordable · Student-Friendly</div>
+        <h1 style="animation:fadeDown .6s .1s ease both;">Book Your <span>Project</span></h1>
+        <p style="animation:fadeDown .6s .2s ease both;">4 quick steps <b>·</b> we reply within 24 hours</p>
+    </div>
+</section>
+
+<section class="py-4 pb-5">
+<div class="container">
+
+    <!-- Progress -->
+    <div class="wizard-progress">
+        <div class="wizard-step active" id="ws1"><div class="step-dot">01</div><div class="step-label">Service</div></div>
+        <div class="wizard-step"        id="ws2"><div class="step-dot">02</div><div class="step-label">Project</div></div>
+        <div class="wizard-step"        id="ws3"><div class="step-dot">03</div><div class="step-label">Contact</div></div>
+        <div class="wizard-step"        id="ws4"><div class="step-dot">04</div><div class="step-label">Review</div></div>
+    </div>
+
+    <div class="wizard-wrap">
+
+    <!-- ════════════ STEP 1 ════════════ -->
+    <div class="step-panel active" id="step1">
+        <div class="step-title"><i class="fas fa-layer-group"></i> Choose your service</div>
+
+        <div class="service-grid">
+            <div class="svc-card" data-service="Basic PPT" data-price="from ₹99">
+                <div class="svc-check"><i class="fas fa-check"></i></div>
+                <div class="svc-badge">SELECTED</div>
+                <div class="svc-icon"><i class="fas fa-file-powerpoint"></i></div>
+                <div class="svc-name">Basic PPT</div>
+                <div class="svc-tagline">College · Seminar · Quick</div>
+                <div class="svc-price"><sub>from</sub>₹99<span>per project</span></div>
+                <ul class="svc-features">
+                    <li><i class="fas fa-circle"></i>Up to 10 slides</li>
+                    <li><i class="fas fa-circle"></i>Clean design</li>
+                    <li><i class="fas fa-circle"></i>2 free revisions</li>
+                    <li><i class="fas fa-circle"></i>Editable .pptx file</li>
+                </ul>
+            </div>
+
+            <div class="svc-card" data-service="Pro PPT" data-price="from ₹199">
+                <div class="svc-check"><i class="fas fa-check"></i></div>
+                <div class="svc-badge">SELECTED</div>
+                <div class="svc-icon"><i class="fas fa-chart-bar"></i></div>
+                <div class="svc-name">Pro PPT</div>
+                <div class="svc-tagline">Business · MBA · Advanced</div>
+                <div class="svc-price"><sub>from</sub>₹199<span>per project</span></div>
+                <ul class="svc-features">
+                    <li><i class="fas fa-circle"></i>Up to 25 slides</li>
+                    <li><i class="fas fa-circle"></i>Animated slides</li>
+                    <li><i class="fas fa-circle"></i>Unlimited revisions</li>
+                    <li><i class="fas fa-circle"></i>Source files included</li>
+                </ul>
+            </div>
+
+            <div class="svc-card" data-service="Poster Pack" data-price="from ₹159">
+                <div class="svc-check"><i class="fas fa-check"></i></div>
+                <div class="svc-badge">SELECTED</div>
+                <div class="svc-icon"><i class="fas fa-image"></i></div>
+                <div class="svc-name">Poster Pack</div>
+                <div class="svc-tagline">Events · Social · Print</div>
+                <div class="svc-price"><sub>from</sub>₹159<span>pack of 3 designs</span></div>
+                <ul class="svc-features">
+                    <li><i class="fas fa-circle"></i>3 poster designs</li>
+                    <li><i class="fas fa-circle"></i>300 DPI print-ready</li>
+                    <li><i class="fas fa-circle"></i>3 revisions</li>
+                    <li><i class="fas fa-circle"></i>JPG + PDF delivery</li>
+                </ul>
+            </div>
+
+            <div class="svc-card" data-service="Website Design" data-price="Custom quote">
+                <div class="svc-check"><i class="fas fa-check"></i></div>
+                <div class="svc-badge">SELECTED</div>
+                <div class="svc-icon"><i class="fas fa-laptop-code"></i></div>
+                <div class="svc-name">Website</div>
+                <div class="svc-tagline">Portfolio · Business · Landing</div>
+                <div class="svc-price">Custom<span>free quote in 1 hour</span></div>
+                <ul class="svc-features">
+                    <li><i class="fas fa-circle"></i>Responsive design</li>
+                    <li><i class="fas fa-circle"></i>Modern HTML/CSS/JS</li>
+                    <li><i class="fas fa-circle"></i>1 month free support</li>
+                    <li><i class="fas fa-circle"></i>Fast delivery 3–7 days</li>
+                </ul>
+            </div>
+
+            <div class="svc-card" data-service="Custom / Not Sure" data-price="Let's talk" style="grid-column: 1 / -1; justify-self: center;">
+                <div class="svc-check"><i class="fas fa-check"></i></div>
+                <div class="svc-badge">SELECTED</div>
+                <div class="svc-icon"><i class="fas fa-magic"></i></div>
+                <div class="svc-name">Custom / Not Sure Yet</div>
+                <div class="svc-tagline">Tell us what you need — we'll figure it out together</div>
+                <div class="svc-price">Let's talk<span>free consultation · no commitment</span></div>
+                <ul class="svc-features" style="column-count:2;column-gap:24px;">
+                    <li><i class="fas fa-circle"></i>Any format or output</li>
+                    <li><i class="fas fa-circle"></i>Student discounts available</li>
+                    <li><i class="fas fa-circle"></i>Free quote within 1 hour</li>
+                    <li><i class="fas fa-circle"></i>No advance payment to enquire</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="svcError" style="display:none;color:#ff4d6d;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;margin-bottom:14px;">// please select a service to continue</div>
+
+        <div style="text-align:center;padding:12px 0 0;">
+            <p style="font-family:var(--mono);font-size:.62rem;color:rgba(197,198,199,.28);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;">or skip the form</p>
+            <a href="https://wa.me/918300920680?text=Hi TN WEB RATS! I'd like to discuss a project." class="btn-wa" target="_blank">
+                <i class="fab fa-whatsapp"></i> Message us directly on WhatsApp
+            </a>
+        </div>
+
+        <div class="wizard-nav" style="margin-top:28px;">
+            <div></div>
+            <button class="btn-next" id="next1">
+                <span class="btn-text">Next — Project Details <i class="fas fa-arrow-right"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ════════════ STEP 2 ════════════ -->
+    <div class="step-panel" id="step2">
+        <div class="step-title"><i class="fas fa-pencil-alt"></i> Tell us about your project</div>
+
+        <div class="form-section">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="field-group">
+                        <label class="field-label">Project description *</label>
+                        <div class="field-wrap ta-wrap">
+                            <i class="fas fa-align-left field-icon"></i>
+                            <textarea id="fDetails" class="f-ctrl" style="padding-left:42px;" rows="4"
+                                placeholder="e.g. I need a 15-slide PPT for my final year project on electric vehicles. Needs animations, charts, and a professional dark theme. Submission is next Friday..."></textarea>
+                        </div>
+                        <div class="field-err" id="errDetails">please describe your project (min 20 characters)</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label class="field-label">Your deadline</label>
+                        <div class="field-wrap">
+                            <i class="fas fa-calendar field-icon"></i>
+                            <input type="date" id="fDeadline" class="f-ctrl">
+                        </div>
+                        <div class="date-hint">leave blank if you're flexible</div>
+                        <div class="field-err" id="errDeadline"> deadline cannot be in the past</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label class="field-label">Budget range</label>
+                        <div class="budget-pills">
+                            <div class="budget-pill" data-val="Under ₹500">Under ₹500</div>
+                            <div class="budget-pill" data-val="₹500 – ₹1,000">₹500–₹1k</div>
+                            <div class="budget-pill" data-val="₹1,000 – ₹5,000">₹1k–₹5k</div>
+                            <div class="budget-pill" data-val="₹5,000+">₹5k+</div>
+                            <div class="budget-pill" data-val="Flexible / Discuss">Flexible</div>
+                        </div>
+                        <input type="hidden" id="fBudget">
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="urgency-row" id="urgencyRow">
+                        <div class="urgency-toggle"></div>
+                        <div class="urgency-text">
+                            <strong>⚡ Urgent delivery (+50% fee)</strong>
+                            <small> same-day or next-day turnaround on request</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-nav">
+            <button class="btn-prev" id="prev2"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn-next" id="next2">
+                <span class="btn-text">Next — Your Info <i class="fas fa-arrow-right"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ════════════ STEP 3 ════════════ -->
+    <div class="step-panel" id="step3">
+        <div class="step-title"><i class="fas fa-user"></i> Your contact details</div>
+
+        <div class="form-section">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label class="field-label">Full name *</label>
+                        <div class="field-wrap">
+                            <i class="fas fa-user field-icon"></i>
+                            <input type="text" id="fName" class="f-ctrl" placeholder="Aarav Kumar">
+                        </div>
+                        <div class="field-err" id="errName">name is required</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label class="field-label">WhatsApp / Phone *</label>
+                        <div class="field-wrap">
+                            <i class="fab fa-whatsapp field-icon"></i>
+                            <input type="tel" id="fPhone" class="f-ctrl" placeholder="+91 98765 43210">
+                        </div>
+                        <div class="field-err" id="errPhone"> Enter a valid 10–15 digit number</div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="field-group">
+                        <label class="field-label">Email <span style="opacity:.38;font-size:.88em;">(optional)</span></label>
+                        <div class="field-wrap">
+                            <i class="fas fa-envelope field-icon"></i>
+                            <input type="email" id="fEmail" class="f-ctrl" placeholder="you@example.com">
+                        </div>
+                        <div class="field-err" id="errEmail"> Enter a valid email address</div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="field-group">
+                        <label class="field-label">How did you find us? <span style="opacity:.38;font-size:.88em;">(optional)</span></label>
+                        <div class="field-wrap">
+                            <i class="fas fa-search field-icon"></i>
+                            <select id="fSource" class="f-ctrl">
+                                <option value="">— Select —</option>
+                                <option>Instagram @tn_web_rats</option>
+                                <option>Friend / Classmate referral</option>
+                                <option>WhatsApp forward</option>
+                                <option>College notice board</option>
+                                <option>Google search</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-nav">
+            <button class="btn-prev" id="prev3"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn-next" id="next3">
+                <span class="btn-text">Review Request <i class="fas fa-arrow-right"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ════════════ STEP 4 ════════════ -->
+    <div class="step-panel" id="step4">
+        <div class="step-title"><i class="fas fa-check-double"></i> Review &amp; confirm</div>
+
+        <div class="review-card">
+            <div class="review-header"><i class="fas fa-layer-group"></i> Service Selected</div>
+            <div class="review-body" id="revService"></div>
+        </div>
+        <div class="review-card">
+            <div class="review-header"><i class="fas fa-pencil-alt"></i> Project Details</div>
+            <div class="review-body" id="revProject"></div>
+        </div>
+        <div class="review-card">
+            <div class="review-header"><i class="fas fa-user"></i> Contact Info</div>
+            <div class="review-body" id="revContact"></div>
+        </div>
+
+        <div class="consent-row" id="consentRow">
+            <div class="consent-box"><i class="fas fa-check"></i></div>
+            <div class="consent-text">
+                I agree that TN WEB RATS may contact me on the WhatsApp number provided to discuss this request.
+                I understand that 50% advance payment is required before work begins.
+            </div>
+        </div>
+        <div class="field-err" id="errConsent" style="margin-top:-14px;margin-bottom:18px;">// please confirm to proceed</div>
+
+        <div class="wizard-nav">
+            <button class="btn-prev" id="prev4"><i class="fas fa-arrow-left"></i> Edit</button>
+            <button class="btn-next" id="submitBtn">
+                <span class="btn-text"><i class="fab fa-whatsapp me-1"></i> Send via WhatsApp</span>
+                <span class="btn-loader"><i class="fas fa-circle-notch spin"></i> Sending...</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-ring"><i class="fas fa-paper-plane"></i></div>
+        <h2>Request Sent!</h2>
+        <p id="successMsg">
+            Your booking request has been sent to TN WEB RATS via WhatsApp.<br>
+            We'll reply within <strong style="color:var(--cyan)">24 hours</strong> — usually much faster!<br><br>
+            Urgent? Call or message: <strong style="color:var(--cyan)">+91 8300920680</strong>
+        </p>
+        <div class="success-ref" id="successRef">REF: WRCS-XXXXXX</div>
+        <br><br>
+        <a href="index.html" style="color:var(--cyan);font-family:var(--mono);font-size:.72rem;letter-spacing:.15em;text-decoration:none;text-transform:uppercase;">← Back to Home</a>
+    </div>
+
+    </div><!-- /wizard-wrap -->
+</div>
+</section>
+
+<!-- Footer -->
+<footer class="footer py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <h5 style="color:#66FCF1;"><i class="fas fa-mouse me-2"></i>TN WEB RATS</h5>
+                <p style="color:#C5C6C7;">Fast, creative designs for students & businesses in Tamil Nadu. Started by students, for students.</p>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <h6 style="color:#66FCF1;">Contact</h6>
+                <p style="color:#C5C6C7;margin:0;"><i class="fas fa-envelope me-2"></i>tnwebrats@gmail.com</p>
+                <p style="color:#C5C6C7;margin:0;"><i class="fab fa-whatsapp me-2"></i>+91 8300920680</p>
+                <p style="color:#C5C6C7;"><i class="fab fa-instagram me-2"></i>@tn_web_rats</p>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <h6 style="color:#66FCF1;">Quick Links</h6>
+                <ul class="list-unstyled">
+                    <li><a href="services.html" style="color:#C5C6C7;">Services & Pricing</a></li>
+                    <li><a href="projects.html" style="color:#C5C6C7;">Portfolio</a></li>
+                    <li><a href="help.html" style="color:#C5C6C7;">Help & FAQ</a></li>
+                    <li><a href="about.html" style="color:#C5C6C7;">About Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <hr style="border-color:rgba(102,252,241,.08);">
+        <div class="text-center" style="color:#C5C6C7;">© 2026 TN Web Rats. All rights reserved. Made with ❤️ in Tamil Nadu.</div>
+    </div>
+</footer>
+
+</div><!-- /main-content-wrapper -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="Statics/script.js"></script>
+<script>
+(function(){
+    // ── State ─────────────────────────────────
+    const S = { step:1, service:'', price:'', details:'', deadline:'', budget:'', urgent:false, name:'', phone:'', email:'', source:'' };
+
+    const panels  = [1,2,3,4].map(n=>document.getElementById('step'+n));
+    const wDots   = [1,2,3,4].map(n=>document.getElementById('ws'+n));
+    let consentOK = false;
+
+    // ── Navigate ──────────────────────────────
+    function goTo(n){
+        panels.forEach(p=>p.classList.remove('active'));
+        panels[n-1].classList.add('active');
+        wDots.forEach((d,i)=>{
+            d.classList.remove('active','done');
+            if(i+1<n)  d.classList.add('done');
+            if(i+1===n)d.classList.add('active');
+        });
+        S.step=n;
+        const wrap=document.querySelector('.main-content-wrapper');
+        if(wrap) wrap.scrollTo({top:0,behavior:'smooth'});
+        if(n===4) buildReview();
+    }
+
+    // ── Service cards ─────────────────────────
+    document.querySelectorAll('.svc-card').forEach(c=>{
+        c.addEventListener('click',()=>{
+            document.querySelectorAll('.svc-card').forEach(x=>x.classList.remove('selected'));
+            c.classList.add('selected');
+            S.service=c.dataset.service; S.price=c.dataset.price;
+            document.getElementById('svcError').style.display='none';
+        });
+    });
+
+    // ── Budget pills ──────────────────────────
+    document.querySelectorAll('.budget-pill').forEach(p=>{
+        p.addEventListener('click',()=>{
+            document.querySelectorAll('.budget-pill').forEach(x=>x.classList.remove('active'));
+            p.classList.add('active'); S.budget=p.dataset.val;
+        });
+    });
+
+    // ── Urgency ───────────────────────────────
+    const urgRow=document.getElementById('urgencyRow');
+    urgRow.addEventListener('click',()=>{ urgRow.classList.toggle('active'); S.urgent=urgRow.classList.contains('active'); });
+
+    // ── Consent ───────────────────────────────
+    document.getElementById('consentRow').addEventListener('click',()=>{
+        consentOK=!consentOK;
+        document.getElementById('consentRow').classList.toggle('checked',consentOK);
+        if(consentOK) document.getElementById('errConsent').classList.remove('show');
+    });
+
+    // ── Helpers ───────────────────────────────
+    function err(id,eid,show){
+        const el=document.getElementById(id), er=document.getElementById(eid);
+        el.classList.toggle('is-invalid',show); er.classList.toggle('show',show); return !show;
+    }
+
+    // ── Validate ──────────────────────────────
+    function validate(n){
+        if(n===1){
+            if(!S.service){document.getElementById('svcError').style.display='block';return false;}
+            return true;
+        }
+        if(n===2){
+            const det=document.getElementById('fDetails').value.trim();
+            const dl=document.getElementById('fDeadline').value;
+            let ok=true;
+            ok = err('fDetails','errDetails',det.length<20) ? ok : false;
+            if(dl){ const d=new Date(dl),t=new Date();t.setHours(0,0,0,0); ok=err('fDeadline','errDeadline',d<t)?ok:false; }
+            else { document.getElementById('fDeadline').classList.remove('is-invalid'); document.getElementById('errDeadline').classList.remove('show'); }
+            if(ok){ S.details=det; S.deadline=dl; }
+            return ok;
+        }
+        if(n===3){
+            const nm=document.getElementById('fName').value.trim();
+            const ph=document.getElementById('fPhone').value.trim();
+            const em=document.getElementById('fEmail').value.trim();
+            let ok=true;
+            ok = err('fName','errName',!nm) ? ok : false;
+            ok = err('fPhone','errPhone',!ph||!/^\+?\d{10,15}$/.test(ph)) ? ok : false;
+            if(em) ok = err('fEmail','errEmail',!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) ? ok : false;
+            else { document.getElementById('fEmail').classList.remove('is-invalid'); document.getElementById('errEmail').classList.remove('show'); }
+            if(ok){ S.name=nm; S.phone=ph; S.email=em; S.source=document.getElementById('fSource').value; }
+            return ok;
+        }
+        return true;
+    }
+
+    // ── Build review ──────────────────────────
+    function rrow(k,v,hl){
+        return `<div class="review-row">
+            <span class="review-key">${k}</span>
+            <span class="review-val${hl?' hl':''}">${v||'<span style="opacity:.28">—</span>'}</span>
+        </div>`;
+    }
+    function buildReview(){
+        document.getElementById('revService').innerHTML=
+            `<div class="review-svc-pill"><i class="fas fa-tag"></i>${S.service}</div>`+
+            rrow('Price',S.price,true)+
+            rrow('Urgent delivery',S.urgent?'<span style="color:#ffa94d">Yes (+50%)</span>':'No');
+        document.getElementById('revProject').innerHTML=
+            rrow('Description',S.details.length>90?S.details.slice(0,90)+'…':S.details)+
+            rrow('Deadline',S.deadline||'Flexible')+
+            rrow('Budget',S.budget||'Not specified');
+        document.getElementById('revContact').innerHTML=
+            rrow('Name',S.name)+
+            rrow('Phone / WhatsApp',S.phone,true)+
+            rrow('Email',S.email)+
+            rrow('Found us via',S.source);
+    }
+
+    // ── Nav ───────────────────────────────────
+    document.getElementById('next1').addEventListener('click',()=>{ if(validate(1))goTo(2); });
+    document.getElementById('next2').addEventListener('click',()=>{ if(validate(2))goTo(3); });
+    document.getElementById('next3').addEventListener('click',()=>{ if(validate(3))goTo(4); });
+    document.getElementById('prev2').addEventListener('click',()=>goTo(1));
+    document.getElementById('prev3').addEventListener('click',()=>goTo(2));
+    document.getElementById('prev4').addEventListener('click',()=>goTo(3));
+
+    // ── Submit ────────────────────────────────
+    document.getElementById('submitBtn').addEventListener('click',function(){
+        if(!consentOK){ document.getElementById('errConsent').classList.add('show'); return; }
+        this.classList.add('loading');
+        
+        const ref = 'TNWR-'+Date.now().toString(36).toUpperCase().slice(-6);
+        
+        // Enhanced message format for better readability
+        const msg = [
+            '*New Booking — TN WEB RATS*',
+            `*Service:* ${S.service}`,
+            `*Price:* ${S.price}`,
+            `*Urgent:* ${S.urgent?'YES — same/next day (+50%)':'No'}`,
+            `*Description:* ${S.details}`,
+            `*Deadline:* ${S.deadline||'Flexible'}`,
+            `*Budget:* ${S.budget||'Not specified'}`,
+            `*Name:* ${S.name}`,
+            `*Phone:* ${S.phone}`,
+            `*Email:* ${S.email||'N/A'}`,
+            `*Source:* ${S.source||'N/A'}`,
+            `*Reference:* ${ref}`
+        ].join('\n');
+        
+        // Store booking data for analytics
+        const bookingData = {
+            reference: ref,
+            service: S.service,
+            price: S.price,
+            urgent: S.urgent,
+            details: S.details,
+            deadline: S.deadline,
+            budget: S.budget,
+            name: S.name,
+            phone: S.phone,
+            email: S.email,
+            source: S.source,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Save to localStorage for record keeping
+        const bookings = JSON.parse(localStorage.getItem('tnwr_bookings') || '[]');
+        bookings.push(bookingData);
+        localStorage.setItem('tnwr_bookings', JSON.stringify(bookings));
+        
+        // Send via WhatsApp (primary method)
+        setTimeout(()=>{
+            window.open('https://wa.me/918300920680?text='+encodeURIComponent(msg),'_blank');
+            
+            // Also send via EmailJS for backup (if configured)
+            if(typeof emailjs !== 'undefined' && emailjs.send) {
+                emailjs.send('service_id', 'template_id', {
+                    to_email: 'tnwebrats@gmail.com',
+                    from_name: S.name,
+                    from_email: S.email || 'no-reply@tnwebrats.com',
+                    message: msg,
+                    reference: ref,
+                    service: S.service,
+                    phone: S.phone
+                }).then(function(response) {
+                    console.log('Email backup sent successfully:', response);
+                }).catch(function(error) {
+                    console.log('Email backup failed:', error);
+                });
+            }
+            
+            document.getElementById('step4').classList.remove('active');
+            document.getElementById('successRef').textContent='REF: '+ref;
+            document.getElementById('successOverlay').classList.add('show');
+            wDots.forEach(d=>{d.classList.remove('active');d.classList.add('done');});
+        },1100);
+    });
+
+    // ── Clear errors on input ─────────────────
+    ['fDetails','fDeadline','fName','fPhone','fEmail'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.addEventListener('input',()=>el.classList.remove('is-invalid'));
+    });
+
+})();
+</script>
+</body>
+</html>

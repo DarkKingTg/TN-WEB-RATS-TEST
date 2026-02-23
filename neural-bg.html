@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural BG</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0B0C10; overflow: hidden; width: 100vw; height: 100vh; }
+  canvas { display: block; position: fixed; inset: 0; cursor: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const CFG = {
+  count:         120,   // Slightly fewer particles = cleaner spread
+  connectDist3D: 320,   // MUCH larger connection distance
+  fov:           1800,  // Better depth perspective
+  speed:         0.45,  // Slightly more motion
+  drag:          0.94,  // Less drag = no clumping
+  depth:         1000,  // More Z space = better distribution
+  mouseRadius:   260,
+  mouseStrength: 2.2,   // Less pull = less collapse
+  repelRadius:   380,
+  repelStrength: 6,
+  turbulence:    0.25,  // Reduced randomness
+  light: { x: 2.2, y: 1.1 },
+};
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W, H, cx, cy;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W / 2; cy = H / 2;
+}
+window.addEventListener('resize', resize);
+resize();
+
+let rotX = 0.18, rotY = 0.0, zoom = 1.75, frame = 0, lastMouseFrame = -9999;
+const mouseSCR  = { x: cx, y: cy };
+const mouse3D   = { x: 0, y: 0, z: 0, active: false };
+const cursorPos = { x: cx, y: cy };
+
+class Particle {
+  constructor() {
+    this.x  = (Math.random() - 0.5) * W  * 2.4;
+    this.y  = (Math.random() - 0.5) * H  * 2.4;
+    this.z  = (Math.random() - 0.5) * CFG.depth * 3.2;
+    this.vx = (Math.random() - 0.5) * CFG.speed;
+    this.vy = (Math.random() - 0.5) * CFG.speed;
+    this.vz = (Math.random() - 0.5) * CFG.speed * 0.6;
+    this._newTarget();
+    this.retarget = Math.random() * 180;
+    this.baseSize = 1.6 + Math.random() * 2.4;
+    this.phase    = Math.random() * Math.PI * 2;
+    this.pulseSpd = 0.015 + Math.random() * 0.028;
+  }
+
+  _newTarget() {
+    this.tx = (Math.random() - 0.5) * W  * 2.0;
+    this.ty = (Math.random() - 0.5) * H  * 2.0;
+    this.tz = (Math.random() - 0.5) * CFG.depth * 2.8;
+    this.retarget = 130 + Math.random() * 220;
+  }
+
+  update() {
+    if (--this.retarget <= 0) this._newTarget();
+    this.vx += (this.tx - this.x) * 0.00007;
+    this.vy += (this.ty - this.y) * 0.00007;
+    this.vz += (this.tz - this.z) * 0.00005;
+    this.vx += (Math.random() - 0.5) * CFG.turbulence;
+    this.vy += (Math.random() - 0.5) * CFG.turbulence;
+    this.vz += (Math.random() - 0.5) * CFG.turbulence * 0.5;
+
+    if (mouse3D.active) {
+      const dx = mouse3D.x - this.x, dy = mouse3D.y - this.y, dz = mouse3D.z - this.z;
+      const d  = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      if (d < CFG.mouseRadius && d > 1) {
+        const f = (1 - d / CFG.mouseRadius) * CFG.mouseStrength * 0.013;
+        this.vx += dx/d*f; this.vy += dy/d*f; this.vz += dz/d*f*0.45;
+      }
+    }
+
+    this.vx *= CFG.drag; this.vy *= CFG.drag; this.vz *= CFG.drag;
+    const spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy + this.vz*this.vz);
+    const max = CFG.speed * 3.5;
+    if (spd > max) { const r=max/spd; this.vx*=r; this.vy*=r; this.vz*=r; }
+
+    this.x += this.vx; this.y += this.vy; this.z += this.vz;
+    this.phase += this.pulseSpd;
+
+    const bx=W*1.3, by=H*1.3, bz=CFG.depth*1.7;
+    if (this.x >  bx) this.x = -bx; if (this.x < -bx) this.x =  bx;
+    if (this.y >  by) this.y = -by; if (this.y < -by) this.y =  by;
+    if (this.z >  bz) this.z = -bz; if (this.z < -bz) this.z =  bz;
+  }
+
+  project() {
+    const cY=Math.cos(rotY), sY=Math.sin(rotY);
+    let rx = this.x*cY - this.z*sY, rz = this.x*sY + this.z*cY;
+    const cX=Math.cos(rotX), sX=Math.sin(rotX);
+    let ry = this.y*cX - rz*sX, fz = this.y*sX + rz*cX;
+    let fx=rx, fy=ry;
+    const fov=CFG.fov*zoom, persp=fov+fz+CFG.depth;
+    const scale = persp > 1 ? fov/persp : 0.001;
+    return { sx: cx+fx*scale, sy: cy+fy*scale, scale, fz };
+  }
+}
+
+const pairAlpha = new Float32Array(CFG.count * CFG.count);
+const particles = Array.from({ length: CFG.count }, () => new Particle());
+
+function lightFactor(sx, sy) {
+  const dx=(sx/W-0.5)-CFG.light.x, dy=(sy/H-0.5)-CFG.light.y;
+  return Math.max(0.25, 1 - Math.sqrt(dx*dx+dy*dy)*1.0);
+}
+
+function dist3D(a, b) {
+  const dx=a.x-b.x, dy=a.y-b.y, dz=a.z-b.z;
+  return Math.sqrt(dx*dx+dy*dy+dz*dz);
+}
+
+function drawOrb(p, pj) {
+  const lf=lightFactor(pj.sx,pj.sy), pulse=0.72+0.28*Math.sin(p.phase);
+  const r=pj.scale*p.baseSize*2.4*pulse, alpha=Math.min(1,pj.scale*2.1)*lf;
+  if (alpha<0.02||r<0.3) return;
+
+  const halo=ctx.createRadialGradient(pj.sx,pj.sy,0,pj.sx,pj.sy,r*5.5);
+  halo.addColorStop(0,  `rgba(102,252,241,${alpha*0.6})`);
+  halo.addColorStop(0.45,`rgba(69,162,158,${alpha*0.2})`);
+  halo.addColorStop(1,  'rgba(69,162,158,0)');
+  ctx.beginPath(); ctx.arc(pj.sx,pj.sy,r*5.5,0,Math.PI*2);
+  ctx.fillStyle=halo; ctx.fill();
+
+  const core=ctx.createRadialGradient(pj.sx-r*0.35,pj.sy-r*0.35,0,pj.sx,pj.sy,r);
+  core.addColorStop(0,   `rgba(245,255,255,${alpha})`);
+  core.addColorStop(0.35,`rgba(142,255,252,${alpha})`);
+  core.addColorStop(0.8, `rgba(102,252,241,${alpha*0.95})`);
+  core.addColorStop(1,   `rgba(11,12,16,${alpha*0.25})`);
+  ctx.beginPath(); ctx.arc(pj.sx,pj.sy,r,0,Math.PI*2);
+  ctx.fillStyle=core; ctx.fill();
+}
+
+function drawConnection(pjA, pjB, alpha) {
+  if (alpha<0.004) return;
+  const lfA=lightFactor(pjA.sx,pjA.sy), lfB=lightFactor(pjB.sx,pjB.sy);
+  const fa=alpha*(lfA+lfB)*0.5*1.2;
+  const lineW=Math.max(0.2, alpha*2.2*Math.min(pjA.scale,pjB.scale));
+
+  const g=ctx.createLinearGradient(pjA.sx,pjA.sy,pjB.sx,pjB.sy);
+  g.addColorStop(0,   `rgba(142,255,252,${fa*lfA})`);
+  g.addColorStop(0.25,`rgba(142,255,252,${fa})`);
+  g.addColorStop(0.5, `rgba(220,255,252,${fa*1.25})`);
+  g.addColorStop(0.75,`rgba(142,255,252,${fa})`);
+  g.addColorStop(1,   `rgba(102,252,241,${fa*lfB})`);
+  ctx.beginPath(); ctx.moveTo(pjA.sx,pjA.sy); ctx.lineTo(pjB.sx,pjB.sy);
+  ctx.strokeStyle=g; ctx.lineWidth=lineW; ctx.lineCap='round'; ctx.stroke();
+
+  if (alpha>0.18) {
+    for (let o=0; o<2; o++) {
+      const t=((frame*0.008+o*0.5)%1);
+      const tx=pjA.sx+(pjB.sx-pjA.sx)*t, ty=pjA.sy+(pjB.sy-pjA.sy)*t;
+      const pa=alpha*Math.sin(t*Math.PI)*0.95;
+      if (pa>0.04) {
+        const pr=4.5*alpha;
+        const sh=ctx.createRadialGradient(tx,ty,0,tx,ty,pr);
+        sh.addColorStop(0,  `rgba(245,255,255,${pa})`);
+        sh.addColorStop(0.5,`rgba(102,252,241,${pa*0.5})`);
+        sh.addColorStop(1,  'rgba(102,252,241,0)');
+        ctx.beginPath(); ctx.arc(tx,ty,pr,0,Math.PI*2);
+        ctx.fillStyle=sh; ctx.fill();
+      }
+    }
+  }
+}
+
+function updateMouse3D() {
+  const sx=mouseSCR.x-cx, sy=mouseSCR.y-cy;
+  const cY=Math.cos(-rotY), sY=Math.sin(-rotY);
+  const cX=Math.cos(-rotX), sX=Math.sin(-rotX);
+  const uy=sy*cX, uz=sy*sX;
+  mouse3D.x=sx*cY-uz*sY; mouse3D.y=uy; mouse3D.z=sx*sY+uz*cY;
+}
+
+function repelBurst() {
+  particles.forEach(p => {
+    const dx=p.x-mouse3D.x, dy=p.y-mouse3D.y, dz=p.z-mouse3D.z;
+    const d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if (d<CFG.repelRadius&&d>1) {
+      const f=(1-d/CFG.repelRadius)*CFG.repelStrength;
+      p.vx+=dx/d*f; p.vy+=dy/d*f; p.vz+=dz/d*f*0.55;
+    }
+  });
+}
+
+function drawCursor() {
+  const x=cursorPos.x, y=cursorPos.y;
+  ctx.beginPath(); ctx.arc(x,y,11,0,Math.PI*2);
+  ctx.strokeStyle='rgba(102,252,241,0.65)'; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2);
+  ctx.fillStyle='rgba(102,252,241,0.9)'; ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x-7,y); ctx.lineTo(x+7,y);
+  ctx.moveTo(x,y-7); ctx.lineTo(x,y+7);
+  ctx.strokeStyle='rgba(102,252,241,0.35)'; ctx.lineWidth=0.8; ctx.stroke();
+}
+
+window.addEventListener('mousemove', e => {
+  mouseSCR.x=e.clientX; mouseSCR.y=e.clientY;
+  cursorPos.x=e.clientX; cursorPos.y=e.clientY;
+  mouse3D.active=true; lastMouseFrame=frame;
+});
+window.addEventListener('mouseleave', () => { mouse3D.active=false; });
+window.addEventListener('click', repelBurst);
+window.addEventListener('wheel', e => {
+  zoom=Math.max(0.4,Math.min(3.0,zoom-e.deltaY*0.0008));
+}, { passive: true });
+window.addEventListener('touchmove', e => {
+  const t=e.touches[0];
+  mouseSCR.x=t.clientX; mouseSCR.y=t.clientY;
+  cursorPos.x=t.clientX; cursorPos.y=t.clientY;
+  mouse3D.active=true; lastMouseFrame=frame;
+}, { passive: true });
+window.addEventListener('touchstart', e => {
+  const t=e.touches[0]; mouseSCR.x=t.clientX; mouseSCR.y=t.clientY; repelBurst();
+}, { passive: true });
+
+function draw() {
+  frame++;
+  const idle = frame - lastMouseFrame > 180;
+  if (idle) { rotY+=0.00028; rotX+=0.00011; }
+  else {
+    rotX+=(0.18+(mouseSCR.y/H-0.5)*0.65-rotX)*0.014;
+    rotY+=((mouseSCR.x/W-0.5)*1.3-rotY)*0.014;
+  }
+  updateMouse3D();
+
+  ctx.fillStyle='#0B0C10'; ctx.fillRect(0,0,W,H);
+  const vig=ctx.createRadialGradient(cx,cy,H*0.05,cx,cy,H*0.92);
+  vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,0.68)');
+  ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+
+  particles.forEach(p => p.update());
+  const PJ=particles.map(p=>p.project());
+  const order=particles.map((_,i)=>i).sort((a,b)=>PJ[a].fz-PJ[b].fz);
+
+  ctx.save();
+  for (let ii=0; ii<order.length-1; ii++) {
+    for (let jj=ii+1; jj<order.length; jj++) {
+      const i=order[ii], j=order[jj];
+      const d=dist3D(particles[i],particles[j]);
+      const key=i*CFG.count+j;
+      const target=d<CFG.connectDist3D ? Math.pow(1-d/CFG.connectDist3D,1.8) : 0;
+      pairAlpha[key]+=(target-pairAlpha[key])*(target>pairAlpha[key]?0.10:0.038);
+      if (pairAlpha[key]>0.003) drawConnection(PJ[i],PJ[j],pairAlpha[key]);
+    }
+  }
+  ctx.restore();
+
+  order.forEach(i=>drawOrb(particles[i],PJ[i]));
+
+  if (mouse3D.active) {
+    const ring=ctx.createRadialGradient(cursorPos.x,cursorPos.y,5,cursorPos.x,cursorPos.y,65);
+    ring.addColorStop(0,'rgba(102,252,241,0.0)');
+    ring.addColorStop(0.75,'rgba(102,252,241,0.05)');
+    ring.addColorStop(0.92,'rgba(102,252,241,0.10)');
+    ring.addColorStop(1,'rgba(102,252,241,0.0)');
+    ctx.beginPath(); ctx.arc(cursorPos.x,cursorPos.y,65,0,Math.PI*2);
+    ctx.fillStyle=ring; ctx.fill();
+  }
+
+  drawCursor();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

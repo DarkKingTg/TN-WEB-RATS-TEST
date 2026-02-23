@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Signup — TN WEB RATS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0C10;--dark:#1F2833;--gray:#C5C6C7;--cyan:#66FCF1;--teal:#45A29E;--danger:#ff4d6d;--warn:#ffa94d;--mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:var(--sans);color:var(--gray);min-height:100vh;display:grid;place-items:center;padding:40px 20px;cursor:none;}
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.scanlines{position:fixed;inset:0;z-index:1;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;}
+#cursor{position:fixed;pointer-events:none;z-index:9999;top:0;left:0;transform:translate(-50%,-50%);}
+
+/* ── Layout ── */
+.page-wrap{position:relative;z-index:10;display:grid;grid-template-columns:360px 480px;gap:32px;max-width:900px;width:100%;animation:fadeUp .7s ease both;}
+@media(max-width:860px){.page-wrap{grid-template-columns:1fr;}.left-panel{display:none;}}
+
+/* ── Left panel ── */
+.left-panel{display:flex;flex-direction:column;justify-content:center;gap:0;}
+.lp-brand{display:flex;align-items:center;gap:14px;margin-bottom:36px;}
+.lp-brand img{width:52px;height:52px;border-radius:50%;border:2px solid var(--cyan);box-shadow:0 0 22px rgba(102,252,241,.3);}
+.lp-brand .bname{font-family:var(--mono);font-size:.8rem;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;}
+.lp-brand .bsub{font-family:var(--mono);font-size:.58rem;color:rgba(197,198,199,.35);letter-spacing:.14em;margin-top:3px;}
+.lp-headline{font-size:1.9rem;font-weight:700;color:var(--gray);letter-spacing:.04em;line-height:1.25;margin-bottom:16px;}
+.lp-headline span{color:var(--cyan);}
+.lp-desc{font-family:var(--mono);font-size:.72rem;color:rgba(197,198,199,.38);letter-spacing:.08em;line-height:1.8;margin-bottom:32px;}
+.lp-badges{display:flex;flex-direction:column;gap:11px;}
+.lp-badge{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(31,40,51,.7);border:1px solid rgba(102,252,241,.1);border-radius:10px;}
+.lp-badge i{color:var(--cyan);font-size:.95rem;width:18px;text-align:center;}
+.lp-badge .bt{font-size:.88rem;font-weight:600;color:var(--gray);}
+.lp-badge .bs{font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.35);letter-spacing:.06em;margin-top:1px;}
+.lp-security{margin-top:24px;font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.25);letter-spacing:.12em;display:flex;align-items:center;gap:7px;}
+
+/* ── Card ── */
+.signup-card{background:rgba(31,40,51,.92);backdrop-filter:blur(18px);border:1px solid rgba(102,252,241,.12);border-radius:18px;padding:36px 34px;animation:fadeUp .7s .1s ease both;}
+@media(max-width:480px){.signup-card{padding:24px 18px;}}
+.card-top{margin-bottom:26px;}
+.card-top h2{font-size:1.35rem;font-weight:700;color:var(--gray);letter-spacing:.06em;}
+.card-top h2 span{color:var(--cyan);}
+.card-top p{font-family:var(--mono);font-size:.63rem;color:rgba(197,198,199,.35);letter-spacing:.1em;margin-top:5px;}
+
+/* Invite key banner */
+.invite-banner{display:flex;align-items:center;gap:11px;padding:12px 15px;background:rgba(255,169,77,.06);border:1px solid rgba(255,169,77,.22);border-radius:10px;margin-bottom:22px;}
+.invite-banner i{color:var(--warn);font-size:1rem;}
+.invite-banner span{font-family:var(--mono);font-size:.66rem;letter-spacing:.09em;color:rgba(197,198,199,.55);line-height:1.6;}
+
+/* Fields */
+.field-group{margin-bottom:18px;}
+.field-label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(197,198,199,.4);margin-bottom:6px;transition:color .3s;}
+.field-group:focus-within .field-label{color:var(--cyan);}
+.field-wrap{position:relative;}
+.field-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(102,252,241,.28);font-size:.82rem;pointer-events:none;transition:color .3s;}
+.field-group:focus-within .field-icon{color:var(--cyan);}
+.f-ctrl{width:100%;padding:12px 13px 12px 40px;background:rgba(11,12,16,.75);border:1px solid rgba(102,252,241,.12);border-radius:10px;color:var(--gray);font-family:var(--sans);font-size:.92rem;font-weight:500;transition:border-color .3s,box-shadow .3s;outline:none;-webkit-appearance:none;}
+.f-ctrl::placeholder{color:rgba(197,198,199,.18);}
+.f-ctrl:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(102,252,241,.08);background:rgba(11,12,16,.92);}
+.f-ctrl.is-invalid{border-color:var(--danger);}
+.f-ctrl.is-valid{border-color:var(--teal);}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(197,198,199,.28);cursor:pointer;font-size:.82rem;padding:4px;transition:color .2s;}
+.pw-eye:hover{color:var(--cyan);}
+.field-hint{font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.28);letter-spacing:.07em;margin-top:4px;}
+.field-err{display:none;font-family:var(--mono);font-size:.62rem;color:var(--danger);letter-spacing:.07em;margin-top:4px;}
+.field-err.show{display:block;}
+.field-ok{display:none;font-family:var(--mono);font-size:.62rem;color:var(--teal);letter-spacing:.07em;margin-top:4px;}
+.field-ok.show{display:block;}
+
+/* Invite key special */
+.key-wrap{display:flex;gap:7px;}
+.key-seg{width:100%;padding:12px 8px;text-align:center;background:rgba(11,12,16,.75);border:1px solid rgba(102,252,241,.12);border-radius:9px;color:var(--cyan);font-family:var(--mono);font-size:1rem;letter-spacing:.12em;text-transform:uppercase;outline:none;transition:border-color .3s,box-shadow .3s;}
+.key-seg:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(102,252,241,.08);}
+.key-seg.is-invalid{border-color:var(--danger);}
+.key-seg::placeholder{color:rgba(102,252,241,.18);font-size:.8rem;}
+
+/* Two-col grid */
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:420px){.f-row{grid-template-columns:1fr;}}
+
+/* Role tiles */
+.role-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+.role-tile{padding:13px 10px;background:rgba(11,12,16,.72);border:1px solid rgba(102,252,241,.1);border-radius:10px;cursor:pointer;text-align:center;transition:all .25s;}
+.role-tile:hover{border-color:rgba(102,252,241,.3);}
+.role-tile.active{border-color:var(--cyan);background:rgba(102,252,241,.07);}
+.role-tile i{display:block;font-size:1.1rem;color:rgba(102,252,241,.3);margin-bottom:7px;transition:color .2s;}
+.role-tile.active i{color:var(--cyan);}
+.role-tile .rname{font-size:.82rem;font-weight:700;color:rgba(197,198,199,.5);transition:color .2s;}
+.role-tile.active .rname{color:var(--gray);}
+.role-tile .rdesc{font-family:var(--mono);font-size:.58rem;color:rgba(197,198,199,.28);margin-top:2px;letter-spacing:.05em;}
+/* Locked state — key has a fixed role */
+.role-grid.locked .role-tile{pointer-events:none;opacity:.28;filter:grayscale(.6);}
+.role-grid.locked .role-tile.active{opacity:1;filter:none;border-color:var(--cyan);background:rgba(102,252,241,.07);pointer-events:none;}
+.role-grid.locked .role-tile.active i{color:var(--cyan);}
+.role-grid.locked .role-tile.active .rname{color:var(--gray);}
+.role-lock-banner{
+  display:none;align-items:center;gap:10px;
+  padding:10px 14px;margin-bottom:10px;
+  background:rgba(102,252,241,.06);
+  border:1px solid rgba(102,252,241,.2);
+  border-radius:9px;
+}
+.role-lock-banner.show{display:flex;}
+.role-lock-banner i{color:var(--cyan);font-size:.9rem;flex-shrink:0;}
+.role-lock-banner span{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:rgba(197,198,199,.55);line-height:1.6;}
+.role-lock-banner strong{color:var(--cyan);}
+
+/* Strength bar */
+.strength-wrap{margin-top:7px;}
+.strength-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px;}
+.strength-seg{height:3px;border-radius:2px;background:rgba(197,198,199,.1);transition:background .3s;}
+.strength-seg.s1{background:var(--danger);}
+.strength-seg.s2{background:var(--warn);}
+.strength-seg.s3{background:var(--teal);}
+.strength-seg.s4{background:var(--success,#69db7c);}
+.strength-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:rgba(197,198,199,.35);}
+
+/* Submit button */
+.btn-signup{width:100%;padding:14px;background:linear-gradient(90deg,var(--teal),var(--cyan));border:none;border-radius:10px;color:var(--bg);font-family:var(--sans);font-size:.97rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .3s;margin-top:4px;}
+.btn-signup::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:translateX(-100%);transition:transform .5s;}
+.btn-signup:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(102,252,241,.32);}
+.btn-signup:hover::before{transform:translateX(100%);}
+.btn-signup.loading{pointer-events:none;opacity:.8;}
+.btn-signup.loading .btn-text{display:none;}
+.btn-signup .btn-loader{display:none;}
+.btn-signup.loading .btn-loader{display:inline-flex;align-items:center;gap:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{animation:spin .7s linear infinite;}
+
+.footer-link{text-align:center;margin-top:18px;font-family:var(--mono);font-size:.65rem;color:rgba(197,198,199,.3);letter-spacing:.07em;}
+.footer-link a{color:var(--cyan);text-decoration:none;}
+.footer-link a:hover{opacity:.7;}
+
+/* Success overlay */
+.success-overlay{display:none;text-align:center;padding:30px 10px;}
+.success-overlay.show{display:block;animation:fadeUp .5s ease both;}
+.success-ring{width:78px;height:78px;border-radius:50%;border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem;color:var(--cyan);animation:pglow 2s infinite;}
+.success-overlay h3{color:var(--cyan);font-size:1.5rem;letter-spacing:.1em;margin-bottom:10px;}
+.success-overlay p{font-family:var(--mono);font-size:.72rem;color:rgba(197,198,199,.45);line-height:1.8;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pglow{0%,100%{box-shadow:0 0 16px rgba(102,252,241,.2);}50%{box-shadow:0 0 36px rgba(102,252,241,.5);}}
+</style>
+
+<style>
+.neural-background-iframe {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    z-index: 0;
+    pointer-events: none;
+}
+</style>
+
+</head>
+<body>
+    <iframe src="neural-bg.html" class="neural-background-iframe"></iframe>
+
+<div class="scanlines"></div>
+<svg id="cursor" width="28" height="28" viewBox="0 0 28 28">
+  <circle cx="14" cy="14" r="9" fill="none" stroke="rgba(102,252,241,0.65)" stroke-width="1.2"/>
+  <circle cx="14" cy="14" r="2" fill="rgba(102,252,241,0.9)"/>
+  <line x1="7" y1="14" x2="4" y2="14" stroke="rgba(102,252,241,0.4)" stroke-width="0.8"/>
+  <line x1="21" y1="14" x2="24" y2="14" stroke="rgba(102,252,241,0.4)" stroke-width="0.8"/>
+  <line x1="14" y1="7" x2="14" y2="4" stroke="rgba(102,252,241,0.4)" stroke-width="0.8"/>
+  <line x1="14" y1="21" x2="14" y2="24" stroke="rgba(102,252,241,0.4)" stroke-width="0.8"/>
+</svg>
+
+<div class="page-wrap">
+
+  <!-- Left panel -->
+  <div class="left-panel">
+    <div class="lp-brand">
+      <img src="RATTY.png" alt="TN WEB RATS" onerror="this.style.display='none'">
+      <div><div class="bname">TN WEB RATS</div><div class="bsub">// admin portal</div></div>
+    </div>
+    <div class="lp-headline">Admin<br><span>Control Panel</span><br>Access</div>
+    <div class="lp-desc">restricted registration<br>invite key required to create account<br>all activity is logged and monitored</div>
+    <div class="lp-badges">
+      <div class="lp-badge"><div><div class="bt">Dashboard Access</div><div class="bs">view all orders & stats</div></div></div>
+      <div class="lp-badge"><i class="fas fa-folder-open"></i><div><div class="bt">Project Management</div><div class="bs">update status & payments</div></div></div>
+      <div class="lp-badge"><i class="fas fa-users-cog"></i><div><div class="bt">Team Controls</div><div class="bs"> manage team members</div></div></div>
+    </div>
+    <div class="lp-security"><i class="fas fa-shield-halved"></i> 256-bit encrypted · access logged</div>
+  </div>
+
+  <!-- Signup card -->
+  <div class="signup-card">
+    <div id="formWrap">
+      <div class="card-top">
+        <h2>Register <span>Admin</span></h2>
+        <p>invite-only · fill all required fields</p>
+      </div>
+
+      <div class="invite-banner">
+        <i class="fas fa-key"></i>
+        <span>You need an <strong style="color:var(--warn)">invite key</strong> from an existing Super Admin to register.<br>Default demo key: <strong style="color:var(--cyan)">TNWR-DEMO-DEMO-2026</strong></span>
+      </div>
+
+      <!-- Invite key -->
+      <div class="field-group" id="fgInvite">
+        <label class="field-label"><i class="fas fa-key me-1"></i> Invite Key</label>
+        <div class="key-wrap">
+          <input class="key-seg" id="k1" maxlength="4" placeholder="XXXX">
+          <input class="key-seg" id="k2" maxlength="4" placeholder="XXXX">
+          <input class="key-seg" id="k3" maxlength="4" placeholder="XXXX">
+          <input class="key-seg" id="k4" maxlength="4" placeholder="XXXX">
+        </div>
+        <div class="field-err" id="errKey">invalid invite key</div>
+        <div class="field-ok"  id="okKey">key accepted ✓</div>
+      </div>
+
+      <!-- Name row -->
+      <div class="f-row">
+        <div class="field-group">
+          <label class="field-label">First Name</label>
+          <div class="field-wrap"><i class="fas fa-user field-icon"></i>
+            <input class="f-ctrl" id="fFirst" placeholder="Aarav">
+          </div>
+          <div class="field-err" id="errFirst"> required</div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Last Name</label>
+          <div class="field-wrap"><i class="fas fa-user field-icon"></i>
+            <input class="f-ctrl" id="fLast" placeholder="Kumar">
+          </div>
+          <div class="field-err" id="errLast"> required</div>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <div class="field-wrap"><i class="fas fa-envelope field-icon"></i>
+          <input class="f-ctrl" type="email" id="fEmail" placeholder="admin@tnwebrats.com">
+        </div>
+        <div class="field-err" id="errEmail">invalid email</div>
+        <div class="field-ok"  id="okEmail"> email available ✓</div>
+      </div>
+
+      <!-- Role -->
+      <div class="field-group">
+        <label class="field-label">Role</label>
+        <div class="role-lock-banner" id="roleLockBanner">
+          <i class="fas fa-lock"></i>
+          <span>Role locked by invite key — you have been invited as <strong id="roleLockLabel">Manager</strong>. Contact an admin if this is incorrect.</span>
+        </div>
+        <div class="role-grid" id="roleGrid">
+          <div class="role-tile" data-role="superadmin"><i class="fas fa-crown"></i><div class="rname">Super Admin</div><div class="rdesc">full access</div></div>
+          <div class="role-tile active" data-role="manager"><i class="fas fa-user-tie"></i><div class="rname">Manager</div><div class="rdesc">orders + team</div></div>
+          <div class="role-tile" data-role="designer"><i class="fas fa-paint-brush"></i><div class="rname">Designer</div><div class="rdesc">assigned orders</div></div>
+          <div class="role-tile" data-role="support"><i class="fas fa-headset"></i><div class="rname">Support</div><div class="rdesc">view only</div></div>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap"><i class="fas fa-lock field-icon"></i>
+          <input class="f-ctrl" type="password" id="fPass" placeholder="Min 8 characters">
+          <button class="pw-eye" id="eye1" type="button"><i class="fas fa-eye"></i></button>
+        </div>
+        <div class="strength-wrap">
+          <div class="strength-bar">
+            <div class="strength-seg" id="sb1"></div>
+            <div class="strength-seg" id="sb2"></div>
+            <div class="strength-seg" id="sb3"></div>
+            <div class="strength-seg" id="sb4"></div>
+          </div>
+          <div class="strength-label" id="strengthLabel">enter password</div>
+        </div>
+        <div class="field-err" id="errPass"> min 8 chars, include uppercase & number</div>
+      </div>
+
+      <!-- Confirm password -->
+      <div class="field-group">
+        <label class="field-label">Confirm Password</label>
+        <div class="field-wrap"><i class="fas fa-lock field-icon"></i>
+          <input class="f-ctrl" type="password" id="fConfirm" placeholder="Repeat password">
+          <button class="pw-eye" id="eye2" type="button"><i class="fas fa-eye"></i></button>
+        </div>
+        <div class="field-err" id="errConfirm">passwords do not match</div>
+      </div>
+
+      <button class="btn-signup" id="signupBtn">
+        <span class="btn-text"><i class="fas fa-user-shield me-2"></i>Create Account</span>
+        <span class="btn-loader"><i class="fas fa-circle-notch spin"></i>&nbsp;Creating...</span>
+      </button>
+
+      <div class="footer-link">
+        Already have an account? <a href="login.html">Sign in →</a>
+      </div>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-overlay" id="successWrap">
+      <div class="success-ring"><i class="fas fa-shield-halved"></i></div>
+      <h3>Account Created!</h3>
+      <p id="successMsg">Welcome aboard.<br>Redirecting to login...</p>
+    </div>
+
+  </div><!-- /signup-card -->
+</div><!-- /page-wrap -->
+
+<script>
+// ── Cursor ────────────────────────────────────
+const curEl=document.getElementById('cursor');
+document.addEventListener('mousemove',e=>{curEl.style.left=e.clientX+'px';curEl.style.top=e.clientY+'px';});
+
+// ── Invite key — auto jump between segments ────
+// ── Load valid keys from localStorage (generated by admin dashboard) ──────────
+// Falls back to hardcoded defaults so first-time setup always works
+const FALLBACK_KEYS = ['TNWR-DEMO-DEMO-2026','TNWR-RATS-RATS-2026','TNWR-ADMN-ADMN-2026'];
+function getValidKeys() {
+  const stored = JSON.parse(localStorage.getItem('tnwr_invite_keys') || '[]');
+  const activeStored = stored.filter(k => k.status === 'active').map(k => k.key);
+  // Also include fallbacks in case dashboard hasn't been opened yet
+  return [...new Set([...activeStored, ...FALLBACK_KEYS])];
+}
+const VALID_KEYS = getValidKeys(); // snapshot at page load
+const segs = ['k1','k2','k3','k4'].map(id=>document.getElementById(id));
+
+segs.forEach((seg,i)=>{
+  seg.addEventListener('input',()=>{
+    seg.value=seg.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(seg.value.length===4 && i<3) segs[i+1].focus();
+    validateKey();
+  });
+  seg.addEventListener('keydown',e=>{
+    if(e.key==='Backspace'&&seg.value===''&&i>0) segs[i-1].focus();
+    if(e.key==='-'||e.key==='Tab') { e.preventDefault(); if(i<3) segs[i+1].focus(); }
+  });
+  // Allow paste of full key
+  seg.addEventListener('paste',e=>{
+    e.preventDefault();
+    const text=(e.clipboardData||window.clipboardData).getData('text').toUpperCase().replace(/\s/g,'');
+    const parts=text.split('-');
+    if(parts.length>=4){
+      segs.forEach((s,idx)=>{ s.value=parts[idx]?.slice(0,4)||''; });
+    } else {
+      const clean=text.replace(/-/g,'');
+      segs.forEach((s,idx)=>{ s.value=clean.slice(idx*4,(idx+1)*4); });
+    }
+    validateKey();
+    segs[3].focus();
+  });
+});
+
+function getKey(){ return segs.map(s=>s.value).join('-'); }
+function getKeyObj(keyStr) {
+  // Look up full key object from localStorage to get its locked role
+  const stored = JSON.parse(localStorage.getItem('tnwr_invite_keys') || '[]');
+  return stored.find(k => k.key === keyStr && k.status === 'active') || null;
+}
+
+function validateKey(){
+  const k    = getKey();
+  const full = k.replace(/-/g,'').length === 16;
+  if (!full) { clearKeyState(); unlockRole(); return false; }
+
+  // Check active keys in localStorage first, then fallback list
+  const keyObj = getKeyObj(k);
+  const valid  = keyObj !== null || VALID_KEYS.includes(k);
+
+  document.getElementById('errKey').classList.toggle('show', !valid);
+  document.getElementById('okKey').classList.toggle('show',   valid);
+  segs.forEach(s => s.classList.toggle('is-invalid', !valid));
+
+  if (valid && keyObj) {
+    // Key has a specific role — lock the role selector
+    lockRole(keyObj.role);
+  } else if (valid) {
+    // Legacy / fallback key — no role restriction
+    unlockRole();
+  }
+  return valid;
+}
+
+function clearKeyState(){
+  document.getElementById('errKey').classList.remove('show');
+  document.getElementById('okKey').classList.remove('show');
+  segs.forEach(s => s.classList.remove('is-invalid'));
+  unlockRole();
+}
+
+// ── Role lock / unlock ──────────────────────────
+const roleLabels = {
+  superadmin: 'Super Admin',
+  manager:    'Manager',
+  designer:   'Designer',
+  support:    'Support',
+};
+
+function lockRole(role) {
+  selectedRole = role;
+  // Activate the correct tile, deactivate the rest
+  document.querySelectorAll('.role-tile').forEach(t => {
+    t.classList.toggle('active', t.dataset.role === role);
+  });
+  // Lock the grid
+  document.getElementById('roleGrid').classList.add('locked');
+  // Show banner
+  const banner = document.getElementById('roleLockBanner');
+  document.getElementById('roleLockLabel').textContent = roleLabels[role] || role;
+  banner.classList.add('show');
+}
+
+function unlockRole() {
+  document.getElementById('roleGrid').classList.remove('locked');
+  document.getElementById('roleLockBanner').classList.remove('show');
+  // Let the user pick freely — restore default active tile
+  document.querySelectorAll('.role-tile').forEach(t => {
+    t.classList.toggle('active', t.dataset.role === selectedRole);
+  });
+}
+
+// ── Role tiles (free selection when not locked) ─
+let selectedRole = 'manager';
+document.querySelectorAll('.role-tile').forEach(tile => {
+  tile.addEventListener('click', () => {
+    if (document.getElementById('roleGrid').classList.contains('locked')) return;
+    document.querySelectorAll('.role-tile').forEach(t => t.classList.remove('active'));
+    tile.classList.add('active');
+    selectedRole = tile.dataset.role;
+  });
+});
+
+// ── Password strength ──────────────────────────
+const strengthClasses=['s1','s2','s3','s4'];
+const strengthLabels=['// too weak','// fair — add numbers','// good — add symbols','// strong ✓'];
+document.getElementById('fPass').addEventListener('input',calcStrength);
+
+function calcStrength(){
+  const pw=document.getElementById('fPass').value;
+  let score=0;
+  if(pw.length>=8)  score++;
+  if(/[A-Z]/.test(pw)) score++;
+  if(/[0-9]/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+  for(let i=0;i<4;i++){
+    const seg=document.getElementById('sb'+(i+1));
+    seg.className='strength-seg'+(i<score?' '+strengthClasses[score-1]:'');
+  }
+  document.getElementById('strengthLabel').textContent=pw.length?strengthLabels[score>0?score-1:0]:'// enter password';
+  return score;
+}
+
+// ── Password toggle ────────────────────────────
+[['eye1','fPass'],['eye2','fConfirm']].forEach(([eid,fid])=>{
+  document.getElementById(eid).addEventListener('click',function(){
+    const inp=document.getElementById(fid),icon=this.querySelector('i');
+    inp.type=inp.type==='password'?'text':'password';
+    icon.className=inp.type==='password'?'fas fa-eye':'fas fa-eye-slash';
+  });
+});
+
+// ── Email live check ───────────────────────────
+document.getElementById('fEmail').addEventListener('blur',()=>{
+  const em=document.getElementById('fEmail').value.trim();
+  const valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+  if(!em) return;
+  document.getElementById('errEmail').classList.toggle('show',!valid);
+  document.getElementById('okEmail').classList.toggle('show',valid);
+  document.getElementById('fEmail').classList.toggle('is-invalid',!valid);
+  if(valid){
+    const admins=JSON.parse(localStorage.getItem('tnwr_admins')||'[]');
+    const taken=admins.some(a=>a.email===em.toLowerCase());
+    if(taken){
+      document.getElementById('errEmail').textContent='// email already registered';
+      document.getElementById('errEmail').classList.add('show');
+      document.getElementById('okEmail').classList.remove('show');
+      document.getElementById('fEmail').classList.add('is-invalid');
+    }
+  }
+});
+
+// ── Helpers ────────────────────────────────────
+function showErr(id,msg){const el=document.getElementById(id);if(msg)el.textContent=msg;el.classList.add('show');}
+function hideErr(id){document.getElementById(id).classList.remove('show');}
+function markInvalid(id){document.getElementById(id).classList.add('is-invalid');}
+function markValid(id){document.getElementById(id).classList.remove('is-invalid');}
+
+// ── Submit ─────────────────────────────────────
+document.getElementById('signupBtn').addEventListener('click',function(){
+  let ok=true;
+
+  // Key
+  if(!validateKey()){ ok=false; }
+
+  // First/last
+  const first=document.getElementById('fFirst').value.trim();
+  const last =document.getElementById('fLast').value.trim();
+  if(!first){ showErr('errFirst'); markInvalid('fFirst'); ok=false; } else hideErr('errFirst');
+  if(!last) { showErr('errLast');  markInvalid('fLast');  ok=false; } else hideErr('errLast');
+
+  // Email
+  const email=document.getElementById('fEmail').value.trim().toLowerCase();
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    showErr('errEmail',' valid email required'); markInvalid('fEmail'); ok=false;
+  } else {
+    const admins=JSON.parse(localStorage.getItem('tnwr_admins')||'[]');
+    if(admins.some(a=>a.email===email)){
+      showErr('errEmail','email already registered'); markInvalid('fEmail'); ok=false;
+    }
+  }
+
+  // Password
+  const pass=document.getElementById('fPass').value;
+  const score=calcStrength();
+  if(score<2||pass.length<8){ showErr('errPass'); markInvalid('fPass'); ok=false; } else hideErr('errPass');
+
+  // Confirm
+  const conf=document.getElementById('fConfirm').value;
+  if(pass!==conf){ showErr('errConfirm'); markInvalid('fConfirm'); ok=false; } else hideErr('errConfirm');
+
+  if(!ok) return;
+
+  this.classList.add('loading');
+
+  setTimeout(()=>{
+    const admins=JSON.parse(localStorage.getItem('tnwr_admins')||'[]');
+    const newAdmin={
+      id:      'ADM' + Date.now().toString(36).toUpperCase().slice(-4),
+      name:    first + ' ' + last,
+      email,
+      password: btoa(pass),
+      role:     selectedRole,
+      createdAt: new Date().toISOString(),
+    };
+    admins.push(newAdmin);
+    localStorage.setItem('tnwr_admins', JSON.stringify(admins));
+
+    // ── Mark the used invite key so dashboard shows it as consumed ──
+    const usedKeyVal = getKey();
+    const storedKeys = JSON.parse(localStorage.getItem('tnwr_invite_keys') || '[]');
+    const kIdx = storedKeys.findIndex(k => k.key === usedKeyVal);
+    if (kIdx !== -1) {
+      storedKeys[kIdx].status  = 'used';
+      storedKeys[kIdx].usedBy  = first + ' ' + last;
+      storedKeys[kIdx].usedAt  = new Date().toISOString();
+      localStorage.setItem('tnwr_invite_keys', JSON.stringify(storedKeys));
+    }
+
+    document.getElementById('formWrap').style.display='none';
+    document.getElementById('successWrap').classList.add('show');
+    document.getElementById('successMsg').innerHTML=
+      `Welcome, <strong style="color:var(--cyan)">${first}</strong>.<br>
+       Role: <strong style="color:var(--teal)">${selectedRole}</strong><br><br>
+       Redirecting to login in 3 seconds...`;
+
+    setTimeout(()=>window.location.href='login.html', 3000);
+  }, 1100);
+});
+
+// Clear invalid on input
+['fFirst','fLast','fEmail','fPass','fConfirm'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    document.getElementById(id).classList.remove('is-invalid');
+  });
+});
+
+// ── Neural BG (compact) ────────────────────────
+(function(){
+  const CFG={count:50,dist:210,fov:480,speed:.4,drag:.968,depth:600,turb:.012,light:{x:.62,y:-.38}};
+  
+  let W,H,cx,cy,rotX=.18,rotY=0,zoom=1.5,frame=0,lastMF=-9999;
+  const mS={x:0,y:0},m3={x:0,y:0,z:0,active:false};
+  let pts=[],pA;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cx=W/2;cy=H/2;if(!pts.length){pts=Array.from({length:CFG.count},()=>new P());pA=new Float32Array(CFG.count*CFG.count);}}
+  window.addEventListener('resize',resize);resize();
+  class P{constructor(){this.x=(Math.random()-.5)*W*2.2;this.y=(Math.random()-.5)*H*2.2;this.z=(Math.random()-.5)*CFG.depth*3;this.vx=(Math.random()-.5)*CFG.speed;this.vy=(Math.random()-.5)*CFG.speed;this.vz=(Math.random()-.5)*CFG.speed*.6;this._t();this.rt=Math.random()*180;this.sz=1.4+Math.random()*2;this.ph=Math.random()*Math.PI*2;this.ps=.015+Math.random()*.025;}
+  _t(){this.tx=(Math.random()-.5)*W*1.8;this.ty=(Math.random()-.5)*H*1.8;this.tz=(Math.random()-.5)*CFG.depth*2.5;this.rt=120+Math.random()*200;}
+  update(){if(--this.rt<=0)this._t();this.vx+=(this.tx-this.x)*.00007;this.vy+=(this.ty-this.y)*.00007;this.vz+=(this.tz-this.z)*.00005;this.vx+=(Math.random()-.5)*CFG.turb;this.vy+=(Math.random()-.5)*CFG.turb;this.vz+=(Math.random()-.5)*CFG.turb*.5;this.vx*=CFG.drag;this.vy*=CFG.drag;this.vz*=CFG.drag;const sp=Math.sqrt(this.vx*this.vx+this.vy*this.vy+this.vz*this.vz),mx=CFG.speed*3;if(sp>mx){const r=mx/sp;this.vx*=r;this.vy*=r;this.vz*=r;}this.x+=this.vx;this.y+=this.vy;this.z+=this.vz;this.ph+=this.ps;const bx=W*1.2,by=H*1.2,bz=CFG.depth*1.6;if(this.x>bx)this.x=-bx;if(this.x<-bx)this.x=bx;if(this.y>by)this.y=-by;if(this.y<-by)this.y=by;if(this.z>bz)this.z=-bz;if(this.z<-bz)this.z=bz;}
+  project(){const cY=Math.cos(rotY),sY=Math.sin(rotY);let rx=this.x*cY-this.z*sY,rz=this.x*sY+this.z*cY;const cX=Math.cos(rotX),sX=Math.sin(rotX);let ry=this.y*cX-rz*sX,fz=this.y*sX+rz*cX;const fov=CFG.fov*zoom,p=fov+fz+CFG.depth,sc=p>1?fov/p:.001;return{sx:cx+rx*sc,sy:cy+ry*sc,scale:sc,fz};}}
+  function lf(sx,sy){const dx=(sx/W-.5)-CFG.light.x,dy=(sy/H-.5)-CFG.light.y;return Math.max(.18,1-Math.sqrt(dx*dx+dy*dy)*1.25);}
+  function d3(a,b){const dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z;return Math.sqrt(dx*dx+dy*dy+dz*dz);}
+  function drawOrb(p,pj){const l=lf(pj.sx,pj.sy),r=pj.scale*p.sz*2.2*(0.72+0.28*Math.sin(p.ph)),a=Math.min(1,pj.scale*2.1)*l;if(a<.02||r<.3)return;const h=ctx.createRadialGradient(pj.sx,pj.sy,0,pj.sx,pj.sy,r*5);h.addColorStop(0,`rgba(102,252,241,${a*.4})`);h.addColorStop(.45,`rgba(69,162,158,${a*.12})`);h.addColorStop(1,'rgba(69,162,158,0)');ctx.beginPath();ctx.arc(pj.sx,pj.sy,r*5,0,Math.PI*2);ctx.fillStyle=h;ctx.fill();const c=ctx.createRadialGradient(pj.sx-r*.35,pj.sy-r*.35,0,pj.sx,pj.sy,r);c.addColorStop(0,`rgba(235,255,255,${a})`);c.addColorStop(.35,`rgba(102,252,241,${a})`);c.addColorStop(.8,`rgba(69,162,158,${a*.85})`);c.addColorStop(1,`rgba(11,12,16,${a*.35})`);ctx.beginPath();ctx.arc(pj.sx,pj.sy,r,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();}
+  function drawConn(pjA,pjB,alpha){if(alpha<.004)return;const fa=alpha*(lf(pjA.sx,pjA.sy)+lf(pjB.sx,pjB.sy))*.5*.9,lw=Math.max(.2,alpha*2*Math.min(pjA.scale,pjB.scale));ctx.beginPath();ctx.moveTo(pjA.sx,pjA.sy);ctx.lineTo(pjB.sx,pjB.sy);ctx.strokeStyle=`rgba(102,252,241,${fa})`;ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();}
+  window.addEventListener('mousemove',e=>{mS.x=e.clientX;mS.y=e.clientY;m3.active=true;lastMF=frame;});
+  window.addEventListener('mouseleave',()=>{m3.active=false;});
+  function loop(){frame++;const idle=frame-lastMF>180;if(idle){rotY+=.00025;rotX+=.0001;}else{rotX+=(.18+(mS.y/H-.5)*.6-rotX)*.013;rotY+=((mS.x/W-.5)*1.2-rotY)*.013;}ctx.fillStyle='#0B0C10';ctx.fillRect(0,0,W,H);const vig=ctx.createRadialGradient(cx,cy,H*.05,cx,cy,H*.92);vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.72)');ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);pts.forEach(p=>p.update());const PJ=pts.map(p=>p.project());const ord=pts.map((_,i)=>i).sort((a,b)=>PJ[a].fz-PJ[b].fz);for(let ii=0;ii<ord.length-1;ii++){for(let jj=ii+1;jj<ord.length;jj++){const i=ord[ii],j=ord[jj],d=d3(pts[i],pts[j]),key=i*CFG.count+j,tgt=d<CFG.dist?Math.pow(1-d/CFG.dist,1.8):0;pA[key]+=(tgt-pA[key])*(tgt>pA[key]?.10:.038);if(pA[key]>.003)drawConn(PJ[i],PJ[j],pA[key]);}}ord.forEach(i=>drawOrb(pts[i],PJ[i]));requestAnimationFrame(loop);}
+  loop();
+})();
+</script>
+</body>
+</html>

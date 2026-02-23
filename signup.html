@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — TN WEB RATS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="Statics/styles.css" rel="stylesheet">
+<style>
+:root{--bg:#0B0C10;--dark:#1F2833;--gray:#C5C6C7;--cyan:#66FCF1;--teal:#45A29E;--danger:#ff4d6d;--mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:var(--sans);color:var(--gray);min-height:100vh;overflow-x:hidden;}
+.neural-background-iframe{position:fixed;inset:0;width:100%;height:100%;border:none;z-index:0;pointer-events:none;}
+
+/* ── Admin trigger — subtle rat paw print in top-left corner ──
+   Looks like a tiny decorative watermark. Triple-click to go to admin-signup. */
+#adminTrigger{
+  position:fixed;top:10px;left:10px;
+  width:36px;height:36px;
+  z-index:9999;
+  background:transparent;border:none;outline:none;padding:0;
+  cursor:default;
+  opacity:0.13;
+  transition:opacity .4s ease;
+  filter:drop-shadow(0 0 4px rgba(102,252,241,0.3));
+}
+#adminTrigger:hover{
+  opacity:0.32;
+}
+/* Click progress dots — show after 1st and 2nd click */
+#adminTrigger.click1{ opacity:0.28; filter:drop-shadow(0 0 6px rgba(102,252,241,0.5)); }
+#adminTrigger.click2{ opacity:0.55; filter:drop-shadow(0 0 10px rgba(102,252,241,0.8)); }
+
+.navbar{z-index:100!important;}
+.main-content-wrapper{position:relative;z-index:2;overflow-y:auto;height:100vh;}
+
+/* Hero */
+.signup-hero{padding:130px 0 48px;text-align:center;background:linear-gradient(to bottom,rgba(11,12,16,.65),rgba(11,12,16,.2));}
+.signup-hero .tag{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(102,252,241,.25);border-radius:20px;padding:6px 18px;margin-bottom:20px;}
+.signup-hero h1{font-size:clamp(1.9rem,4.5vw,3rem);font-weight:700;color:var(--gray);letter-spacing:.06em;}
+.signup-hero h1 span{color:var(--cyan);}
+.signup-hero p{margin-top:10px;color:rgba(197,198,199,.45);font-family:var(--mono);font-size:.82rem;letter-spacing:.08em;}
+
+/* Benefits */
+.benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:580px;margin:0 auto 40px;padding:0 20px;}
+@media(max-width:600px){.benefits{grid-template-columns:1fr;}}
+.benefit{background:rgba(31,40,51,.7);border:1px solid rgba(102,252,241,.09);border-radius:12px;padding:18px 16px;text-align:center;}
+.benefit i{font-size:1.3rem;color:var(--cyan);margin-bottom:10px;display:block;}
+.benefit .bt{font-size:.88rem;font-weight:700;color:var(--gray);margin-bottom:4px;}
+.benefit .bs{font-family:var(--mono);font-size:.62rem;color:rgba(197,198,199,.35);letter-spacing:.05em;line-height:1.6;}
+
+/* Card */
+.signup-card{background:rgba(31,40,51,.88);backdrop-filter:blur(14px);border:1px solid rgba(102,252,241,.11);border-radius:18px;padding:36px 40px;max-width:560px;margin:0 auto 60px;}
+@media(max-width:600px){.signup-card{padding:24px 18px;margin:0 12px 48px;}}
+
+/* Tabs */
+.tab-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid rgba(102,252,241,.12);border-radius:11px;overflow:hidden;margin-bottom:26px;}
+.tab-btn{padding:11px;text-align:center;font-family:var(--sans);font-size:.88rem;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .25s;color:rgba(197,198,199,.4);background:rgba(11,12,16,.5);}
+.tab-btn.active{background:rgba(102,252,241,.08);color:var(--cyan);box-shadow:inset 0 -2px 0 var(--cyan);}
+.tab-btn:hover:not(.active){color:var(--gray);background:rgba(102,252,241,.04);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeUp .35s ease both;}
+
+/* Fields */
+.field-group{margin-bottom:17px;}
+.field-label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(197,198,199,.38);margin-bottom:6px;transition:color .3s;}
+.field-group:focus-within .field-label{color:var(--cyan);}
+.field-wrap{position:relative;}
+.field-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(102,252,241,.24);font-size:.82rem;pointer-events:none;transition:color .3s;}
+.field-group:focus-within .field-icon{color:var(--cyan);}
+.f-ctrl{width:100%;padding:12px 13px 12px 39px;background:rgba(11,12,16,.72);border:1px solid rgba(102,252,241,.11);border-radius:10px;color:var(--gray);font-family:var(--sans);font-size:.92rem;font-weight:500;transition:border-color .3s,box-shadow .3s;outline:none;-webkit-appearance:none;}
+.f-ctrl::placeholder{color:rgba(197,198,199,.16);}
+.f-ctrl:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(102,252,241,.07);background:rgba(11,12,16,.9);}
+.f-ctrl.is-invalid{border-color:var(--danger);}
+select.f-ctrl{cursor:pointer;}
+select.f-ctrl option{background:var(--dark);}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(197,198,199,.24);cursor:pointer;font-size:.82rem;padding:4px;transition:color .2s;}
+.pw-eye:hover{color:var(--cyan);}
+.field-err{display:none;font-family:var(--mono);font-size:.6rem;color:var(--danger);letter-spacing:.07em;margin-top:4px;}
+.field-err.show{display:block;}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:480px){.f-row{grid-template-columns:1fr;}}
+
+/* Strength */
+.strength-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:7px 0 3px;}
+.s-seg{height:3px;border-radius:2px;background:rgba(197,198,199,.09);transition:background .3s;}
+.s-seg.lv1{background:var(--danger);}
+.s-seg.lv2{background:#ffa94d;}
+.s-seg.lv3{background:var(--teal);}
+.s-seg.lv4{background:#69db7c;}
+.strength-txt{font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.3);letter-spacing:.09em;}
+
+/* Terms */
+.terms-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer;user-select:none;}
+.chk-box{width:18px;height:18px;border:2px solid rgba(102,252,241,.22);border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.terms-row.checked .chk-box{background:var(--cyan);border-color:var(--cyan);}
+.chk-box i{color:var(--bg);font-size:.6rem;display:none;}
+.terms-row.checked .chk-box i{display:block;}
+.terms-txt{font-size:.82rem;color:rgba(197,198,199,.45);line-height:1.5;}
+.terms-txt a{color:var(--cyan);text-decoration:none;}
+
+/* Alert */
+.alert-box{padding:11px 14px;border-radius:9px;font-family:var(--mono);font-size:.68rem;letter-spacing:.07em;margin-bottom:16px;display:none;}
+.alert-box.error{background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.25);color:var(--danger);}
+.alert-box.success{background:rgba(105,219,124,.07);border:1px solid rgba(105,219,124,.25);color:#69db7c;}
+.alert-box.show{display:block;}
+
+/* Buttons */
+.btn-submit{width:100%;padding:13px;background:linear-gradient(90deg,var(--teal),var(--cyan));border:none;border-radius:10px;color:var(--bg);font-family:var(--sans);font-size:.97rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .3s;}
+.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.17),transparent);transform:translateX(-100%);transition:transform .5s;}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(102,252,241,.3);}
+.btn-submit:hover::before{transform:translateX(100%);}
+.btn-submit.loading{pointer-events:none;opacity:.8;}
+.btn-submit.loading .btn-text{display:none;}
+.btn-submit .btn-loader{display:none;}
+.btn-submit.loading .btn-loader{display:inline-flex;align-items:center;gap:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{animation:spin .7s linear infinite;}
+.or-row{display:flex;align-items:center;gap:12px;margin:16px 0;font-family:var(--mono);font-size:.6rem;color:rgba(197,198,199,.24);letter-spacing:.12em;}
+.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:rgba(102,252,241,.07);}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:rgba(37,211,102,.09);border:1px solid rgba(37,211,102,.26);border-radius:10px;color:#25D366;font-family:var(--sans);font-size:.88rem;font-weight:600;text-decoration:none;transition:all .25s;}
+.btn-wa:hover{background:rgba(37,211,102,.16);color:#25D366;}
+.foot-ln{text-align:center;margin-top:14px;font-family:var(--mono);font-size:.64rem;color:rgba(197,198,199,.28);letter-spacing:.07em;}
+.foot-ln a{color:var(--cyan);text-decoration:none;}
+.footer{background:rgba(11,12,16,.95);border-top:1px solid rgba(102,252,241,.07);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<iframe src="neural-bg.html" class="neural-background-iframe" title=""></iframe>
+
+<!-- ★ Admin trigger — tiny rat paw watermark, triple-click to enter admin ★ -->
+<button id="adminTrigger" title="" aria-hidden="true" tabindex="-1">
+  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Main pad -->
+    <ellipse cx="18" cy="22" rx="7" ry="6" fill="#66FCF1"/>
+    <!-- Top-left toe -->
+    <ellipse cx="9"  cy="14" rx="3.2" ry="3.8" transform="rotate(-20 9 14)"  fill="#66FCF1"/>
+    <!-- Top-center toe -->
+    <ellipse cx="15" cy="10" rx="3"   ry="3.6" transform="rotate(-5 15 10)"  fill="#66FCF1"/>
+    <!-- Top-right toe -->
+    <ellipse cx="22" cy="10" rx="3"   ry="3.6" transform="rotate(5 22 10)"   fill="#66FCF1"/>
+    <!-- Far-right toe -->
+    <ellipse cx="27" cy="14" rx="3.2" ry="3.8" transform="rotate(20 27 14)"  fill="#66FCF1"/>
+  </svg>
+</button>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="index.html">
+      <img src="RATTY.png" alt="TN WEB RATS Logo" class="navbar-logo me-2" onerror="this.style.display='none'">
+      <span class="brand-text">TN WEB RATS</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+        <li class="nav-item"><a class="nav-link" href="projects.html">Projects</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="book.html">Book Service</a></li>
+        <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+        <li class="nav-item"><a class="nav-link active" href="signup.html">Sign Up</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="main-content-wrapper" style="position:relative; z-index:2;">
+
+  <section class="signup-hero">
+    <div class="container">
+      <div class="tag"><i class="fas fa-user-plus me-2"></i>Join TN WEB RATS</div>
+      <h1>Create Your <span>Account</span></h1>
+      <p>track orders · get discounts · priority support</p>
+    </div>
+  </section>
+
+  <div class="container">
+
+    <!-- Benefits -->
+    <div class="benefits">
+      <div class="benefit"><i class="fas fa-receipt"></i><div class="bt">Order Tracking</div><div class="bs"> check your project status anytime</div></div>
+      <div class="benefit"><i class="fas fa-tag"></i><div class="bt">Member Discounts</div><div class="bs">exclusive deals for registered users</div></div>
+      <div class="benefit"><i class="fas fa-headset"></i><div class="bt">Priority Support</div><div class="bs"> faster replies on WhatsApp</div></div>
+    </div>
+
+    <!-- Card -->
+    <div class="signup-card">
+
+      <div class="tab-row">
+        <div class="tab-btn active" data-tab="register"><i class="fas fa-user-plus me-2"></i>Create Account</div>
+        <div class="tab-btn" data-tab="login"><i class="fas fa-sign-in-alt me-2"></i>Sign In</div>
+      </div>
+
+      <div class="alert-box" id="alertBox"></div>
+
+      <!-- ── REGISTER ── -->
+      <div class="tab-panel active" id="tab-register">
+
+        <div class="f-row">
+          <div class="field-group">
+            <label class="field-label">First Name *</label>
+            <div class="field-wrap"><i class="fas fa-user field-icon"></i>
+              <input class="f-ctrl" id="rFirst" placeholder="Aarav">
+            </div>
+            <div class="field-err" id="errRFirst">required</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Last Name *</label>
+            <div class="field-wrap"><i class="fas fa-user field-icon"></i>
+              <input class="f-ctrl" id="rLast" placeholder="Kumar">
+            </div>
+            <div class="field-err" id="errRLast"> required</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Email *</label>
+          <div class="field-wrap"><i class="fas fa-envelope field-icon"></i>
+            <input class="f-ctrl" type="email" id="rEmail" placeholder="you@example.com">
+          </div>
+          <div class="field-err" id="errREmail"> valid email required</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">WhatsApp / Phone *</label>
+          <div class="field-wrap"><i class="fab fa-whatsapp field-icon"></i>
+            <input class="f-ctrl" type="tel" id="rPhone" placeholder="+91 98765 43210">
+          </div>
+          <div class="field-err" id="errRPhone"> valid 10–15 digit number required</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">College / Organization <span style="opacity:.38;font-size:.85em;">(optional)</span></label>
+          <div class="field-wrap"><i class="fas fa-university field-icon"></i>
+            <input class="f-ctrl" id="rCollege" placeholder="e.g. Kongu Engineering College">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Password *</label>
+          <div class="field-wrap"><i class="fas fa-lock field-icon"></i>
+            <input class="f-ctrl" type="password" id="rPass" placeholder="Min 8 characters">
+            <button class="pw-eye" id="rEye1" type="button"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="strength-bar">
+            <div class="s-seg" id="ss1"></div><div class="s-seg" id="ss2"></div>
+            <div class="s-seg" id="ss3"></div><div class="s-seg" id="ss4"></div>
+          </div>
+          <div class="strength-txt" id="sTxt"> enter password</div>
+          <div class="field-err" id="errRPass"> min 8 characters required</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Confirm Password *</label>
+          <div class="field-wrap"><i class="fas fa-lock field-icon"></i>
+            <input class="f-ctrl" type="password" id="rConfirm" placeholder="Repeat password">
+            <button class="pw-eye" id="rEye2" type="button"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="field-err" id="errRConfirm"> passwords do not match</div>
+        </div>
+
+        <div class="terms-row" id="termsRow">
+          <div class="chk-box"><i class="fas fa-check"></i></div>
+          <div class="terms-txt">I agree to the <a href="help.html">Terms of Service</a> and understand TN WEB RATS may contact me via WhatsApp for order updates.</div>
+        </div>
+        <div class="field-err" id="errTerms" style="margin-top:-10px;margin-bottom:14px;"> please accept terms to continue</div>
+
+        <button class="btn-submit" id="btnRegister">
+          <span class="btn-text"><i class="fas fa-user-plus me-2"></i>Create Account</span>
+          <span class="btn-loader"><i class="fas fa-circle-notch spin"></i>&nbsp;Creating...</span>
+        </button>
+
+        <div class="or-row">or</div>
+        <a href="https://wa.me/918300920680?text=Hi! I'd like to register as a customer with TN WEB RATS." target="_blank" class="btn-wa">
+          <i class="fab fa-whatsapp"></i> Register via WhatsApp
+        </a>
+        <div class="foot-ln">Already have an account? <a href="#" id="goLogin">Sign in →</a></div>
+
+      </div>
+
+      <!-- ── LOGIN ── -->
+      <div class="tab-panel" id="tab-login">
+
+        <div class="field-group">
+          <label class="field-label">Email *</label>
+          <div class="field-wrap"><i class="fas fa-envelope field-icon"></i>
+            <input class="f-ctrl" type="email" id="lEmail" placeholder="you@example.com">
+          </div>
+          <div class="field-err" id="errLEmail">email required</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Password *</label>
+          <div class="field-wrap"><i class="fas fa-lock field-icon"></i>
+            <input class="f-ctrl" type="password" id="lPass" placeholder="••••••••">
+            <button class="pw-eye" id="lEye" type="button"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="field-err" id="errLPass">password required</div>
+        </div>
+
+        <button class="btn-submit" id="btnLogin">
+          <span class="btn-text"><i class="fas fa-sign-in-alt me-2"></i>Sign In</span>
+          <span class="btn-loader"><i class="fas fa-circle-notch spin"></i>&nbsp;Signing in...</span>
+        </button>
+
+        <div class="foot-ln" style="margin-top:14px;">No account? <a href="#" id="goRegister">Create one →</a></div>
+
+      </div>
+
+    </div><!-- /signup-card -->
+
+  </div><!-- /container -->
+
+  <footer class="footer py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4 mb-4">
+          <h5 style="color:#66FCF1;"><i class="fas fa-mouse me-2"></i>TN WEB RATS</h5>
+          <p style="color:#C5C6C7;">Fast, creative designs for students & businesses in Tamil Nadu.</p>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <h6 style="color:#66FCF1;">Contact</h6>
+          <p style="color:#C5C6C7;margin:0;"><i class="fas fa-envelope me-2"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="01756f7664637360757241666c60686d2f626e6c">[email&#160;protected]</a></p>
+          <p style="color:#C5C6C7;margin:0;"><i class="fab fa-whatsapp me-2"></i>+91 8300920680</p>
+          <p style="color:#C5C6C7;"><i class="fab fa-instagram me-2"></i>@tn_web_rats</p>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <h6 style="color:#66FCF1;">Quick Links</h6>
+          <ul class="list-unstyled">
+            <li><a href="services.html" style="color:#C5C6C7;">Services</a></li>
+            <li><a href="book.html" style="color:#C5C6C7;">Book a Service</a></li>
+            <li><a href="help.html" style="color:#C5C6C7;">Help & FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr style="border-color:rgba(102,252,241,.08);">
+      <div class="text-center" style="color:#C5C6C7;">© 2026 TN Web Rats. All rights reserved. Made with ❤️ in Tamil Nadu.</div>
+    </div>
+  </footer>
+
+</div><!-- /main-content-wrapper -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="Statics/script.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+//  TN WEB RATS — CUSTOMER SIGNUP
+// ════════════════════════════════════════════════════════
+
+// ── Hidden admin trigger ─────────────────────────────────
+// Triple-click the semi invisible paw 32×32 px zone at very top-left to go to admin signup.
+// No visual cue. Visitors will never find it accidentally.
+let _ac = 0, _at;
+const _trig = document.getElementById('adminTrigger');
+_trig.addEventListener('click', () => {
+  _ac++;
+  clearTimeout(_at);
+  _trig.classList.remove('click1','click2');
+  if (_ac === 1) _trig.classList.add('click1');
+  if (_ac === 2) _trig.classList.add('click2');
+  _at = setTimeout(() => {
+    _ac = 0;
+    _trig.classList.remove('click1','click2');
+  }, 700);
+  if (_ac >= 3) {
+    _ac = 0;
+    _trig.classList.remove('click1','click2');
+    window.location.href = 'admin-signup.html';
+  }
+});
+
+// ── Tab switching ─────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('alertBox').classList.remove('show','error','success');
+}
+
+// Check URL parameters for default tab selection
+function checkDefaultTab() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const loginKey = urlParams.get('login') || urlParams.get('signin') || urlParams.get('auth');
+  
+  if (loginKey) {
+    // User accessed with login key, default to login tab
+    switchTab('login');
+  }
+}
+
+// Initialize tab switching
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+document.getElementById('goLogin').addEventListener('click',    e => { e.preventDefault(); switchTab('login'); });
+document.getElementById('goRegister').addEventListener('click', e => { e.preventDefault(); switchTab('register'); });
+
+// Check for default tab on page load
+document.addEventListener('DOMContentLoaded', checkDefaultTab);
+
+// ── Password eyes ─────────────────────────────────────────
+[['rEye1','rPass'],['rEye2','rConfirm'],['lEye','lPass']].forEach(([eid,fid]) => {
+  document.getElementById(eid).addEventListener('click', function() {
+    const inp = document.getElementById(fid), icon = this.querySelector('i');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    icon.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+  });
+});
+
+// ── Strength meter ────────────────────────────────────────
+const sTxts = [' too short — min 8 chars',' add uppercase & numbers',' getting stronger','strong password ✓'];
+document.getElementById('rPass').addEventListener('input', calcStrength);
+function calcStrength() {
+  const pw = document.getElementById('rPass').value;
+  let sc = 0;
+  if (pw.length >= 8)           sc++;
+  if (/[A-Z]/.test(pw))         sc++;
+  if (/[0-9]/.test(pw))         sc++;
+  if (/[^A-Za-z0-9]/.test(pw))  sc++;
+  ['lv1','lv2','lv3','lv4'].forEach((cls, i) => {
+    const s = document.getElementById('ss'+(i+1));
+    s.className = 's-seg' + (i < sc ? ' ' + cls : '');
+  });
+  document.getElementById('sTxt').textContent = pw ? sTxts[Math.max(sc-1,0)] : 'enter password';
+  return sc;
+}
+
+// ── Terms checkbox ────────────────────────────────────────
+let termsOK = false;
+document.getElementById('termsRow').addEventListener('click', () => {
+  termsOK = !termsOK;
+  document.getElementById('termsRow').classList.toggle('checked', termsOK);
+  if (termsOK) document.getElementById('errTerms').classList.remove('show');
+});
+
+// ── Helpers ───────────────────────────────────────────────
+function showAlert(msg, type = 'error') {
+  const a = document.getElementById('alertBox');
+  a.className = 'alert-box ' + type + ' show';
+  a.innerHTML = msg;
+}
+function ferr(id, msg, show) {
+  const el = document.getElementById(id);
+  if (msg) el.textContent = msg;
+  el.classList.toggle('show', show);
+}
+function finv(id, show) { document.getElementById(id).classList.toggle('is-invalid', show); }
+
+// ── REGISTER ─────────────────────────────────────────────
+document.getElementById('btnRegister').addEventListener('click', function() {
+  let ok = true;
+  const first   = document.getElementById('rFirst').value.trim();
+  const last    = document.getElementById('rLast').value.trim();
+  const email   = document.getElementById('rEmail').value.trim().toLowerCase();
+  const phone   = document.getElementById('rPhone').value.trim().replace(/\s/g,'');
+  const college = document.getElementById('rCollege').value.trim();
+  const pass    = document.getElementById('rPass').value;
+  const confirm = document.getElementById('rConfirm').value;
+
+  if (!first) { ferr('errRFirst','// required',true);  finv('rFirst',true);  ok=false; }
+  else        { ferr('errRFirst','',false);             finv('rFirst',false); }
+
+  if (!last)  { ferr('errRLast','// required',true);   finv('rLast',true);   ok=false; }
+  else        { ferr('errRLast','',false);              finv('rLast',false);  }
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    ferr('errREmail','valid email required',true); finv('rEmail',true); ok=false;
+  } else {
+    const users = JSON.parse(localStorage.getItem('tnwr_users') || '[]');
+    if (users.some(u => u.email === email)) {
+      ferr('errREmail',' email already registered — sign in instead',true); finv('rEmail',true); ok=false;
+    } else { ferr('errREmail','',false); finv('rEmail',false); }
+  }
+
+  if (!phone || !/^\+?\d{10,15}$/.test(phone)) {
+    ferr('errRPhone',' valid phone required',true); finv('rPhone',true); ok=false;
+  } else { ferr('errRPhone','',false); finv('rPhone',false); }
+
+  if (pass.length < 8) {
+    ferr('errRPass',' min 8 chars required',true); finv('rPass',true); ok=false;
+  } else { ferr('errRPass','',false); finv('rPass',false); }
+
+  if (pass !== confirm) {
+    ferr('errRConfirm','passwords do not match',true); finv('rConfirm',true); ok=false;
+  } else { ferr('errRConfirm','',false); finv('rConfirm',false); }
+
+  if (!termsOK) { ferr('errTerms','please accept terms to continue',true); ok=false; }
+
+  if (!ok) return;
+  this.classList.add('loading');
+
+  setTimeout(() => {
+    const users = JSON.parse(localStorage.getItem('tnwr_users') || '[]');
+    const newUser = {
+      id:        'USR-' + Date.now().toString(36).toUpperCase().slice(-5),
+      name:      first + ' ' + last,
+      email, phone, college,
+      password:  btoa(pass),
+      role:      'customer',
+      createdAt: new Date().toISOString(),
+    };
+    users.push(newUser);
+    localStorage.setItem('tnwr_users', JSON.stringify(users));
+    sessionStorage.setItem('tnwr_user_session', JSON.stringify({ ...newUser, password: undefined }));
+
+    this.classList.remove('loading');
+    showAlert(`account created! welcome aboard, <strong>${first}</strong> 🎉`, 'success');
+    setTimeout(() => window.location.href = 'index.html', 1800);
+  }, 900);
+});
+
+// ── LOGIN ─────────────────────────────────────────────────
+document.getElementById('btnLogin').addEventListener('click', function() {
+  const email = document.getElementById('lEmail').value.trim().toLowerCase();
+  const pass  = document.getElementById('lPass').value;
+  let ok = true;
+
+  if (!email) { ferr('errLEmail','// email required',true);    finv('lEmail',true);  ok=false; }
+  else        { ferr('errLEmail','',false);                     finv('lEmail',false); }
+  if (!pass)  { ferr('errLPass','// password required',true);  finv('lPass',true);   ok=false; }
+  else        { ferr('errLPass','',false);                      finv('lPass',false);  }
+
+  if (!ok) return;
+  this.classList.add('loading');
+
+  setTimeout(() => {
+    const users = JSON.parse(localStorage.getItem('tnwr_users') || '[]');
+    const user  = users.find(u => u.email === email && u.password === btoa(pass));
+
+    if (user) {
+      sessionStorage.setItem('tnwr_user_session', JSON.stringify({ ...user, password: undefined }));
+      this.classList.remove('loading');
+      showAlert('welcome back, <strong>' + user.name.split(' ')[0] + '</strong>! 👋', 'success');
+      setTimeout(() => window.location.href = 'index.html', 1500);
+    } else {
+      this.classList.remove('loading');
+      finv('lEmail',true); finv('lPass',true);
+      showAlert('incorrect email or password');
+    }
+  }, 900);
+});
+
+// ── Clear invalid on input ────────────────────────────────
+['rFirst','rLast','rEmail','rPhone','rPass','rConfirm','lEmail','lPass'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => el.classList.remove('is-invalid'));
+});
+</script>
+</body>
+</html>
