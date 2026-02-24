@@ -238,7 +238,7 @@
 <div class="container">
 
     <!-- Progress -->
-    <div class="wizard-progress">
+    <div class="wizard-progress" id="wizardAnchor">
         <div class="wizard-step active" id="ws1"><div class="step-dot">01</div><div class="step-label">Service</div></div>
         <div class="wizard-step"        id="ws2"><div class="step-dot">02</div><div class="step-label">Project</div></div>
         <div class="wizard-step"        id="ws3"><div class="step-dot">03</div><div class="step-label">Contact</div></div>
@@ -583,13 +583,11 @@
             if(i+1===n)d.classList.add('active');
         });
         S.step=n;
-const wizardTop = document.querySelector('.wizard-progress');
-if(wizardTop){
-    const offset = wizardTop.getBoundingClientRect().top + window.scrollY - 90;
-    window.scrollTo({top: offset, behavior:'smooth'});
+const wrapper = document.querySelector('.main-content-wrapper');
+const anchor  = document.getElementById('wizardAnchor');
+if(wrapper && anchor){
+    wrapper.scrollTo({top: anchor.offsetTop - 80, behavior:'smooth'});
 }
-if(n===4) buildReview();
-    }
 
     // ── Service cards ─────────────────────────
     document.querySelectorAll('.svc-card').forEach(c=>{
