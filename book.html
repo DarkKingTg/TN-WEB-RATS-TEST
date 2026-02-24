@@ -574,7 +574,7 @@
     let consentOK = false;
 
     // ── Navigate ──────────────────────────────
-    function goTo(n){
+     function goTo(n){
         panels.forEach(p=>p.classList.remove('active'));
         panels[n-1].classList.add('active');
         wDots.forEach((d,i)=>{
@@ -583,11 +583,12 @@
             if(i+1===n)d.classList.add('active');
         });
         S.step=n;
-const wrapper = document.querySelector('.main-content-wrapper');
-const anchor  = document.getElementById('wizardAnchor');
-if(wrapper && anchor){
-    wrapper.scrollTo({top: anchor.offsetTop - 80, behavior:'smooth'});
-}
+        const wrapper = document.querySelector('.main-content-wrapper');
+        const anchor  = document.getElementById('wizardAnchor');
+        if(wrapper && anchor){
+            wrapper.scrollTo({top: anchor.offsetTop - 80, behavior:'smooth'});
+        }
+        if(n===4) buildReview();
     }
 
     // ── Service cards ─────────────────────────
